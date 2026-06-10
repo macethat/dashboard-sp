@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carga de Datos - Suplementos Panamá</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:#f1f5f9;color:#1e293b;transition:all 0.3s;}
+[data-theme="dark"]{--bg:#0f172a;--card:#1e293b;--border:#334155;--text:#e2e8f0;--muted:#64748b;}
+[data-theme="light"]{--bg:#f8fafc;--card:#ffffff;--border:#e2e8f0;--text:#1e293b;--muted:#94a3b8;}
+body{background:var(--bg);color:var(--text);}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.1);}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all 0.2s;}
+.btn-primary{background:#0066ff;color:#fff;}.btn-primary:hover{background:#0052cc;}
+.btn-secondary{background:var(--bg);color:var(--text);border:1px solid var(--border);}.btn-secondary:hover{background:var(--border);}
+.btn-success{background:#22c55e;color:#fff;}.btn-danger{background:#ef4444;color:#fff;}.btn-warning{background:#f59e0b;color:#fff;}
+.btn-sm{padding:5px 10px;font-size:12px;}
+.badge{display:inline-flex;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;}
+.badge-blue{background:#dbeafe;color:#2563eb;}.badge-green{background:#dcfce7;color:#16a34a;}.badge-yellow{background:#fef9c3;color:#ca8a04;}.badge-red{background:#fee2e2;color:#dc2626;}.badge-purple{background:#f3e8ff;color:#9333ea;}
+input,select,textarea{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--text);width:100%;font-family:inherit;}input:focus,select:focus,textarea:focus{outline:none;border-color:#0066ff;}
+label{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px;display:block;}
+.toast{position:fixed;top:20px;right:20px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;box-shadow:0 10px 25px rgba(0,0,0,0.15);z-index:300;transform:translateX(120%);transition:transform 0.3s;max-width:400px;}.toast.show{transform:translateX(0);}
+.tab-btn{padding:10px 20px;font-size:14px;font-weight:500;border:none;background:transparent;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;}.tab-btn.active{color:#0066ff;border-bottom-color:#0066ff;}.tab-btn:hover{color:var(--text);}
+.drop-zone{border:2px dashed #cbd5e1;border-radius:12px;padding:40px;text-align:center;transition:all 0.3s;cursor:pointer;}.drop-zone:hover,.drop-zone.dragover{border-color:#0066ff;background:rgba(0,102,255,0.05);}
+.preview-table{width:100%;border-collapse:collapse;font-size:12px;}.preview-table th{background:var(--bg);padding:8px 12px;text-align:left;font-weight:600;color:var(--muted);border-bottom:2px solid var(--border);}.preview-table td{padding:8px 12px;border-bottom:1px solid var(--border);color:var(--text);}.preview-table tr:hover td{background:var(--bg);}
+.code-block{background:#1e293b;color:#e2e8f0;border-radius:8px;padding:16px;font-family:'Courier New',monospace;font-size:12px;overflow-x:auto;line-height:1.6;}
+.code-block .key{color:#7dd3fc;}.code-block .str{color:#86efac;}.code-block .num{color:#fbbf24;}.code-block .comment{color:#64748b;}
+.step{display:flex;gap:16px;align-items:flex-start;}.step-num{width:36px;height:36px;border-radius:50%;background:#0066ff;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;}.step.active .step-num{background:#22c55e;}
+.connector{width:2px;height:24px;background:var(--border);margin-left:17px;}
+.progress-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;}.progress-fill{height:100%;border-radius:3px;transition:width 0.5s;}
+.sp-logo{display:inline-flex;align-items:baseline;}.sp-logo .s{color:#dc2626;font-weight:900;font-style:italic;letter-spacing:-2px;font-size:2.5rem;}.sp-logo .p{color:var(--text);font-weight:900;font-style:italic;letter-spacing:-2px;font-size:2.5rem;margin-left:-3px;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}.fade-in{animation:fadeIn 0.3s ease;}
+a.back-link{color:var(--muted);text-decoration:none;font-size:13px;margin-bottom:12px;display:inline-flex;align-items:center;gap:6px;}
+a.back-link:hover{color:var(--text);}
+</style>
+</head>
+<body>
+
+<div id="toast" class="toast">
+<div class="flex items-start gap-3">
+<div id="toastIcon" class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"></div>
+<div class="flex-1"><p id="toastTitle" class="text-sm font-semibold"></p><p id="toastMsg" class="text-xs" style="color:var(--muted)"></p></div>
+<button onclick="document.getElementById('toast').classList.remove('show')" class="text-gray-400 hover:text-gray-600">✕</button>
+</div>
+</div>
+
+<div class="max-w-6xl mx-auto p-6">
+<a href="../dashboard/index.html" class="back-link">← Volver al Dashboard</a>
+<div class="mb-8">
+<div class="flex items-center gap-3 mb-2">
+<div class="sp-logo"><span class="s">S</span><span class="p">P</span></div>
+<div><h1 class="text-xl font-bold">Carga de Datos</h1><p class="text-sm" style="color:var(--muted)">Administra y carga datos al sistema de Suplementos Panamá</p></div>
+</div>
+</div>
+
+<div class="flex gap-1 mb-6 border-b overflow-x-auto" style="border-color:var(--border)">
+<button class="tab-btn active" onclick="switchTab('manual')" id="tabManual">📝 Formulario</button>
+<button class="tab-btn" onclick="switchTab('json')" id="tabJson">{ } JSON</button>
+<button class="tab-btn" onclick="switchTab('csv')" id="tabCsv">📊 CSV</button>
+<button class="tab-btn" onclick="switchTab('file')" id="tabFile">📁 Archivo</button>
+<button class="tab-btn" onclick="switchTab('bulk')" id="tabBulk">⚡ Masiva</button>
+<button class="tab-btn" onclick="switchTab('guide')" id="tabGuide"> Guía</button>
+</div>
+
+<!-- MANUAL -->
+<div id="panelManual" class="fade-in space-y-6">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+<div class="card p-6">
+<h3 class="text-lg font-bold mb-1"> Agregar Tarea</h3>
+<p class="text-xs" style="color:var(--muted)">Crea una nueva tarea individualmente</p>
+<form onsubmit="addManualTask(event)" class="mt-4 space-y-3">
+<div><label>Nombre *</label><input type="text" id="mTaskName" required placeholder="Ej: Crear campaña de email"></div>
+<div><label>Descripción</label><textarea id="mTaskDesc" rows="2" placeholder="Descripción..."></textarea></div>
+<div class="grid grid-cols-2 gap-3"><div><label>Estado</label><select id="mTaskStatus"><option value="pendiente">Pendiente</option><option value="en-progreso">En Progreso</option><option value="revision">En Revisión</option><option value="completado">Completado</option><option value="cancelado">Cancelado</option></select></div><div><label>Prioridad</label><select id="mTaskPriority"><option value="baja">Baja</option><option value="media" selected>Media</option><option value="alta">Alta</option></select></div></div>
+<div class="grid grid-cols-2 gap-3"><div><label>Asignado</label><input type="text" id="mTaskAssignee" value="Carlos Méndez"></div><div><label>Fecha Límite</label><input type="date" id="mTaskDue"></div></div>
+<div><label>Proyecto</label><select id="mTaskProject"><option value="">-- Sin proyecto --</option></select></div>
+<div><label>Etiquetas (comas)</label><input type="text" id="mTaskTags" placeholder="marketing, redes"></div>
+<div><label>Etapa</label><select id="mTaskStage"><option value="planificacion">Planificación</option><option value="desarrollo">Desarrollo</option><option value="revision">Revisión</option><option value="pruebas">Pruebas</option><option value="implementacion">Implementación</option><option value="seguimiento">Seguimiento</option></select></div>
+<button type="submit" class="btn btn-primary w-full">➕ Agregar Tarea</button>
+</form>
+</div>
+
+<div class="card p-6">
+<h3 class="text-lg font-bold mb-1">📁 Agregar Proyecto</h3>
+<p class="text-xs" style="color:var(--muted)">Crea un nuevo proyecto</p>
+<form onsubmit="addManualProject(event)" class="mt-4 space-y-3">
+<div><label>Nombre *</label><input type="text" id="mProjName" required placeholder="Ej: Campaña Q1"></div>
+<div><label>Descripción</label><textarea id="mProjDesc" rows="2"></textarea></div>
+<div class="grid grid-cols-2 gap-3"><div><label>Inicio</label><input type="date" id="mProjStart"></div><div><label>Fin</label><input type="date" id="mProjEnd"></div></div>
+<div><label>Responsable</label><input type="text" id="mProjOwner" value="Carlos Méndez"></div>
+<div><label>Color</label><div class="flex items-center gap-3"><input type="color" id="mProjColor" value="#0066ff" class="h-10 w-16"><div class="flex gap-2"><button type="button" onclick="document.getElementById('mProjColor').value='#0066ff'" class="w-6 h-6 rounded-full bg-blue-600 border-2 border-gray-200"></button><button type="button" onclick="document.getElementById('mProjColor').value='#dc2626'" class="w-6 h-6 rounded-full bg-red-600 border-2 border-gray-200"></button><button type="button" onclick="document.getElementById('mProjColor').value='#22c55e'" class="w-6 h-6 rounded-full bg-green-500 border-2 border-gray-200"></button><button type="button" onclick="document.getElementById('mProjColor').value='#f59e0b'" class="w-6 h-6 rounded-full bg-yellow-500 border-2 border-gray-200"></button></div></div></div>
+<button type="submit" class="btn btn-success w-full">➕ Agregar Proyecto</button>
+</form>
+
+<div class="mt-6 pt-4 border-t" style="border-color:var(--border)">
+<h3 class="text-lg font-bold mb-3">🏷️ Agregar Etiqueta</h3>
+<form onsubmit="addManualTag(event)" class="space-y-3">
+<div><label>Nombre *</label><input type="text" id="mTagName" required placeholder="Ej: Redes Sociales"></div>
+<div><label>Color</label><input type="color" id="mTagColor" value="#dc2626" class="h-10 w-16"></div>
+<div><label>Descripción</label><input type="text" id="mTagDesc" placeholder="Descripción"></div>
+<button type="submit" class="btn btn-primary w-full" style="background:#9333ea">➕ Agregar Etiqueta</button>
+</form>
+</div>
+</div>
+</div>
+
+<div class="card p-6">
+<h3 class="text-lg font-bold mb-4">📊 Datos Actuales en el Sistema</h3>
+<div id="dataStats" class="space-y-3"></div>
+<div class="mt-4 pt-4 border-t flex gap-2 flex-wrap" style="border-color:var(--border)">
+<button onclick="loadSampleData()" class="btn btn-warning btn-sm flex-1">⚡ Cargar Demo</button>
+<button onclick="if(confirm('¿Eliminar TODO?')){DB.clearAll();renderAdminStats();showToast('Eliminado','Todo limpio','warning')}" class="btn btn-danger btn-sm flex-1">🗑️ Limpiar</button>
+<button onclick="Utils.exportDataToFile()" class="btn btn-secondary btn-sm flex-1">📥 Exportar</button>
+<a href="../dashboard/index.html" class="btn btn-primary btn-sm flex-1" style="text-decoration:none;justify-content:center;">📊 Ver Dashboard</a>
+</div>
+</div>
+</div>
+
+<!-- JSON -->
+<div id="panelJson" style="display:none" class="fade-in space-y-6">
+<div class="card p-6">
+<h3 class="text-lg font-bold mb-2">{ } Pegar JSON</h3>
+<p class="text-sm" style="color:var(--muted)">Pega datos JSON. El sistema detecta automáticamente el tipo.</p>
+<div class="mb-4"><label>Tipo</label><select id="jsonType" class="w-48"><option value="auto">🔍 Auto-detectar</option><option value="task">📋 Tareas</option><option value="project">📁 Proyectos</option><option value="tag">🏷️ Etiquetas</option><option value="connection">🔗 Conexiones</option><option value="full"> Completo</option></select></div>
+<div class="mb-4"><label>Modo</label><select id="jsonMode" class="w-48"><option value="append">➕ Agregar</option><option value="replace">🔄 Reemplazar</option><option value="merge">🔀 Fusionar</option></select></div>
+<textarea id="jsonInput" rows="12" placeholder='Pega tu JSON aquí...'></textarea>
+<div class="flex gap-3 mt-4 flex-wrap"><button onclick="importJSON()" class="btn btn-primary">Importar</button><button onclick="formatJSON()" class="btn btn-secondary">Formatear</button><button onclick="validateJSON()" class="btn btn-secondary">Validar</button><button onclick="document.getElementById('jsonInput').value=''" class="btn btn-secondary">Limpiar</button></div>
+<div id="jsonPreview" class="mt-6"></div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+<div class="card p-5 cursor-pointer hover:border-blue-400" onclick="loadTemplate('task')"><div class="flex items-center gap-3 mb-2"><span class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-sm">📋</span><h4 class="text-sm font-bold">Template: Tareas</h4></div><p class="text-xs" style="color:var(--muted)">Estructura para tareas</p></div>
+<div class="card p-5 cursor-pointer hover:border-green-400" onclick="loadTemplate('project')"><div class="flex items-center gap-3 mb-2"><span class="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center text-sm">📁</span><h4 class="text-sm font-bold">Template: Proyectos</h4></div><p class="text-xs" style="color:var(--muted)">Estructura para proyectos</p></div>
+<div class="card p-5 cursor-pointer hover:border-purple-400" onclick="loadTemplate('tag')"><div class="flex items-center gap-3 mb-2"><span class="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center text-sm">🏷️</span><h4 class="text-sm font-bold">Template: Etiquetas</h4></div><p class="text-xs" style="color:var(--muted)">Estructura para etiquetas</p></div>
+<div class="card p-5 cursor-pointer hover:border-yellow-400" onclick="loadTemplate('connection')"><div class="flex items-center gap-3 mb-2"><span class="w-8 h-8 rounded-lg bg-yellow-100 flex items-center justify-center text-sm"></span><h4 class="text-sm font-bold">Template: Conexiones</h4></div><p class="text-xs" style="color:var(--muted)">Vincular tareas</p></div>
+<div class="card p-5 cursor-pointer hover:border-red-400" onclick="loadTemplate('full')"><div class="flex items-center gap-3 mb-2"><span class="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center text-sm">📦</span><h4 class="text-sm font-bold">Template: Completo</h4></div><p class="text-xs" style="color:var(--muted)">Estructura completa</p></div>
+<div class="card p-5 cursor-pointer hover:border-teal-400" onclick="loadTemplate('bulk')"><div class="flex items-center gap-3 mb-2"><span class="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center text-sm">⚡</span><h4 class="text-sm font-bold">Template: Masivo</h4></div><p class="text-xs" style="color:var(--muted)">Múltiples datos</p></div>
+</div>
+</div>
+
+<!-- CSV -->
+<div id="panelCsv" style="display:none" class="fade-in space-y-6">
+<div class="card p-6">
+<h3 class="text-lg font-bold mb-2"> Importar CSV</h3>
+<p class="text-sm" style="color:var(--muted)">Pega datos CSV o sube un archivo</p>
+<div class="mb-4"><label>Tipo</label><select id="csvType"><option value="task">📋 Tareas</option><option value="project">📁 Proyectos</option><option value="tag">🏷️ Etiquetas</option></select></div>
+<div class="mb-4"><label>Datos CSV (primera fila = encabezados)</label><textarea id="csvInput" rows="8" placeholder="name,status,priority,assignee,dueDate,tags,stage,desc
+Diseñar posts,pendiente,alta,Ana Rodríguez,2025-02-15,marketing;redes,planificacion,Crear 30 posts"></textarea></div>
+<div class="mb-4"><label>O sube archivo .csv</label><div id="csvDropZone" class="drop-zone"><svg class="w-10 h-10 mx-auto text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3"/></svg><p class="text-sm" style="color:var(--muted)">Arrastra aquí o <span class="text-blue-600 font-semibold cursor-pointer" onclick="document.getElementById('csvFile').click()">selecciona</span></p><input type="file" id="csvFile" accept=".csv" class="hidden" onchange="handleCsvFile(event)"></div></div>
+<div class="mb-4"><label>Separador</label><select id="csvSeparator"><option value=",">Coma (,)</option><option value=";">Punto y coma (;)</option><option value="\t">Tab</option><option value="|">Pipe (|)</option></select></div>
+<div class="flex gap-3"><button onclick="previewCSV()" class="btn btn-secondary">Vista Previa</button><button onclick="importCSV()" class="btn btn-primary">Importar CSV</button></div>
+<div id="csvPreview" class="mt-6 overflow-x-auto"></div>
+</div>
+</div>
+
+<!-- FILE -->
+<div id="panelFile" style="display:none" class="fade-in space-y-6">
+<div class="card p-6">
+<h3 class="text-lg font-bold mb-2">📁 Importar Respaldo</h3>
+<p class="text-sm" style="color:var(--muted)">Importa un archivo .json exportado previamente</p>
+<div id="jsonDropZone" class="drop-zone" ondrop="handleFileDrop(event)" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')">
+<svg class="w-12 h-12 mx-auto text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3"/></svg>
+<p class="text-base font-semibold mb-1">Arrastra tu archivo .json aquí</p>
+<button onclick="document.getElementById('jsonFileInput').click()" class="btn btn-primary mt-3">Seleccionar Archivo</button>
+<input type="file" id="jsonFileInput" accept=".json" class="hidden" onchange="handleJsonFile(event)">
+</div>
+<div id="filePreview" class="mt-6"></div>
+</div>
+</div>
+
+<!-- BULK -->
+<div id="panelBulk" style="display:none" class="fade-in space-y-6">
+<div class="card p-6">
+<h3 class="text-lg font-bold mb-2">⚡ Carga Masiva Rápida</h3>
+<p class="text-sm" style="color:var(--muted)">Formato: nombre | estado | prioridad | asignado | fecha | etiquetas | etapa | descripción</p>
+<textarea id="bulkInput" rows="8" placeholder='Diseñar banner | pendiente | alta | Ana Rodríguez | 2025-03-01 | marketing;diseno | planificacion | Banner campaña
+Configurar Analytics | en-progreso | media | Miguel Torres | 2025-02-28 | codigo | desarrollo | Integrar GA4'></textarea>
+<div class="flex gap-3 mt-4"><button onclick="previewBulk()" class="btn btn-secondary">Vista Previa</button><button onclick="importBulk()" class="btn btn-primary">⚡ Importar Todo</button></div>
+<div id="bulkPreview" class="mt-6"></div>
+</div>
+<div class="card p-6">
+<h3 class="text-lg font-bold mb-4">📦 Sets Predefinidos</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+<div class="card p-4 cursor-pointer hover:shadow-md" onclick="importPreset('marketing')"><div class="flex items-center gap-3 mb-2"><span class="text-2xl">📱</span><div><h4 class="text-sm font-bold">Marketing Digital</h4><p class="text-xs" style="color:var(--muted)">12 tareas de marketing</p></div></div><div class="flex gap-1 mt-2"><span class="badge badge-blue">Redes</span><span class="badge badge-green">SEO</span><span class="badge badge-yellow">Ads</span></div></div>
+<div class="card p-4 cursor-pointer hover:shadow-md" onclick="importPreset('dev')"><div class="flex items-center gap-3 mb-2"><span class="text-2xl">💻</span><div><h4 class="text-sm font-bold">Desarrollo Web</h4><p class="text-xs" style="color:var(--muted)">10 tareas de programación</p></div></div><div class="flex gap-1 mt-2"><span class="badge badge-blue">Frontend</span><span class="badge badge-green">Backend</span><span class="badge badge-red">DevOps</span></div></div>
+<div class="card p-4 cursor-pointer hover:shadow-md" onclick="importPreset('full')"><div class="flex items-center gap-3 mb-2"><span class="text-2xl">🏢</span><div><h4 class="text-sm font-bold">Set Completo</h4><p class="text-xs" style="color:var(--muted)">Proyectos + tareas + etiquetas</p></div></div><div class="flex gap-1 mt-2"><span class="badge badge-blue">3 Proyectos</span><span class="badge badge-green">15+ Tareas</span></div></div>
+</div>
+</div>
+</div>
+
+<!-- GUIDE -->
+<div id="panelGuide" style="display:none" class="fade-in space-y-6">
+<div class="card p-6">
+<h3 class="text-lg font-bold mb-6">📖 Guía Completa de Carga de Datos</h3>
+<div class="space-y-8">
+<div><div class="step active"><div class="step-num">1</div><div><h4 class="text-sm font-bold">Formulario Manual</h4><p class="text-sm" style="color:var(--muted)">Agrega tareas, proyectos y etiquetas uno por uno.</p></div></div></div>
+<div class="connector"></div>
+<div><div class="step"><div class="step-num">2</div><div><h4 class="text-sm font-bold">Importar JSON</h4><p class="text-sm" style="color:var(--muted)">Pega datos JSON. Usa los templates predefinidos.</p>
+<div class="mt-3 code-block"><span class="comment">// Ejemplo: Agregar tarea</span>
+[{"<span class="key">name</span>":"<span class="str">Mi tarea</span>","<span class="key">status</span>":"<span class="str">pendiente</span>","<span class="key">priority</span>":"<span class="str">alta</span>","<span class="key">assignee</span>":"<span class="str">Carlos</span>","<span class="key">dueDate</span>":"<span class="str">2025-03-15</span>","<span class="key">tags</span>":["<span class="str">marketing</span>"],"stage":"<span class="str">planificacion</span>","<span class="key">desc</span>":"<span class="str">Descripción</span>"}]</div>
+</div></div></div>
+<div class="connector"></div>
+<div><div class="step"><div class="step-num">3</div><div><h4 class="text-sm font-bold">Importar CSV</h4><p class="text-sm" style="color:var(--muted)">Exporta desde Excel como CSV y pega aquí.</p></div></div></div>
+<div class="connector"></div>
+<div><div class="step"><div class="step-num">4</div><div><h4 class="text-sm font-bold">Archivo de Respaldo</h4><p class="text-sm" style="color:var(--muted)">Restaura un respaldo exportado.</p></div></div></div>
+<div class="connector"></div>
+<div><div class="step"><div class="step-num">5</div><div><h4 class="text-sm font-bold">Carga Masiva</h4><p class="text-sm" style="color:var(--muted)">Escribe múltiples tareas separando con | (pipe).</p></div></div></div>
+</div>
+<div class="mt-8 p-5 rounded-lg" style="background:var(--bg);border:1px solid var(--border)">
+<h4 class="text-sm font-bold mb-3">🔄 Flujo Recomendado</h4>
+<div class="flex items-center gap-2 text-sm flex-wrap">
+<span class="px-3 py-1 rounded-full bg-green-100 text-green-700 font-semibold">1. Etiquetas</span>
+<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+<span class="px-3 py-1 rounded-full bg-blue-100 text-blue-700 font-semibold">2. Proyectos</span>
+<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+<span class="px-3 py-1 rounded-full bg-purple-100 text-purple-700 font-semibold">3. Tareas</span>
+<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+<span class="px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 font-semibold">4. Conexiones</span>
+<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+<span class="px-3 py-1 rounded-full bg-gray-100 text-gray-700 font-semibold">5. Ver Dashboard</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<script src="../shared/config.js"></script>
+<script src="../shared/database.js"></script>
+<script src="../shared/utils.js"></script>
+<script>
+function switchTab(tab){document.querySelectorAll('[id^="panel"]').forEach(p=>p.style.display='none');document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.getElementById('panel'+tab.charAt(0).toUpperCase()+tab.slice(1)).style.display='block';document.getElementById('tab'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.add('active');}
+
+function showToast(title,msg,type){const t=document.getElementById('toast'),ic=document.getElementById('toastIcon');document.getElementById('toastTitle').textContent=title;document.getElementById('toastMsg').textContent=msg;const icons={success:{bg:'#dcfce7',icon:'✅'},error:{bg:'#fee2e2',icon:'❌'},warning:{bg:'#fef9c3',icon:'⚠️'}};const i=icons[type]||icons.success;ic.style.background=i.bg;ic.textContent=i.icon;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),4000);}
+
+function renderAdminStats(){const el=document.getElementById('dataStats');if(!el)return;const stats=DB.getStats();el.innerHTML=`
+<div class="flex items-center justify-between p-3 rounded-lg" style="background:var(--bg)"><span class="text-sm font-medium">📋 Tareas</span><div class="flex items-center gap-3"><div class="flex gap-1"><span class="badge badge-green">${stats.completed} ✓</span><span class="badge badge-blue">${stats.inProgress} </span><span class="badge badge-yellow">${stats.pending} ⏸</span></div><span class="text-lg font-bold">${stats.totalTasks}</span></div></div>
+<div class="flex items-center justify-between p-3 rounded-lg" style="background:var(--bg)"><span class="text-sm font-medium">📁 Proyectos</span><span class="text-lg font-bold">${stats.totalProjects}</span></div>
+<div class="flex items-center justify-between p-3 rounded-lg" style="background:var(--bg)"><span class="text-sm font-medium">🏷️ Etiquetas</span><span class="text-lg font-bold">${stats.totalTags}</span></div>
+<div class="flex items-center justify-between p-3 rounded-lg" style="background:var(--bg)"><span class="text-sm font-medium">🔗 Conexiones</span><span class="text-lg font-bold">${stats.totalConnections}</span></div>
+<div class="mt-3"><div class="flex items-center justify-between text-xs mb-1"><span style="color:var(--muted)">Progreso</span><span class="font-bold">${stats.overallProgress}%</span></div><div class="progress-bar"><div class="progress-fill" style="width:${stats.overallProgress}%;background:linear-gradient(90deg,#0066ff,#22c550)"></div></div></div>`;
+const sel=document.getElementById('mTaskProject');if(sel){const v=sel.value;sel.innerHTML='<option value="">-- Sin proyecto --</option>';DB.projects.forEach(p=>{sel.innerHTML+=`<option value="${p.id}">${p.name}</option>`;});sel.value=v;}}
+
+function addManualTask(e){e.preventDefault();const tagsRaw=document.getElementById('mTaskTags').value;const tagNames=tagsRaw.split(',').map(t=>t.trim()).filter(t=>t);const tagIds=tagNames.map(name=>{const ex=DB.tags.find(t=>t.name.toLowerCase()===name.toLowerCase());if(ex)return ex.id;const nt=DB.addTag({name,color:'#'+Math.floor(Math.random()*16777215).toString(16).padStart(6,'0'),desc:''});return nt.id;});DB.addTask({name:document.getElementById('mTaskName').value,desc:document.getElementById('mTaskDesc').value,status:document.getElementById('mTaskStatus').value,priority:document.getElementById('mTaskPriority').value,assignee:document.getElementById('mTaskAssignee').value,dueDate:document.getElementById('mTaskDue').value,projectId:document.getElementById('mTaskProject').value,tags:tagIds,stage:document.getElementById('mTaskStage').value,progress:document.getElementById('mTaskStatus').value==='completado'?100:0});DB.save();document.getElementById('mTaskName').value='';document.getElementById('mTaskDesc').value='';document.getElementById('mTaskTags').value='';showToast('Tarea agregada','Creada exitosamente');renderAdminStats();}
+
+function addManualProject(e){e.preventDefault();DB.addProject({name:document.getElementById('mProjName').value,desc:document.getElementById('mProjDesc').value,start:document.getElementById('mProjStart').value,end:document.getElementById('mProjEnd').value,owner:document.getElementById('mProjOwner').value,color:document.getElementById('mProjColor').value});DB.save();document.getElementById('mProjName').value='';document.getElementById('mProjDesc').value='';showToast('Proyecto agregado','Creado exitosamente');renderAdminStats();}
+
+function addManualTag(e){e.preventDefault();DB.addTag({name:document.getElementById('mTagName').value,color:document.getElementById('mTagColor').value,desc:document.getElementById('mTagDesc').value});DB.save();document.getElementById('mTagName').value='';document.getElementById('mTagDesc').value='';showToast('Etiqueta agregada','Creada exitosamente');renderAdminStats();}
+
+function validateJSON(){try{JSON.parse(document.getElementById('jsonInput').value);showToast('JSON Válido','Correcto');return true;}catch(e){showToast('JSON Inválido',e.message,'error');return false;}}
+function formatJSON(){try{document.getElementById('jsonInput').value=JSON.stringify(JSON.parse(document.getElementById('jsonInput').value),null,2);showToast('Formateado','OK');}catch(e){showToast('Error','JSON inválido','error');}}
+function importJSON(){const raw=document.getElementById('jsonInput').value.trim();if(!raw){showToast('Error','Pega JSON primero','warning');return;}let data;try{data=JSON.parse(raw);}catch(e){showToast('Error','JSON inválido','error');return;}const type=document.getElementById('jsonType').value,mode=document.getElementById('jsonMode').value;if(mode==='replace'&&!confirm('¿Reemplazar TODO?'))return;let count=0;if(type==='full'||(type==='auto'&&data.tasks&&data.projects)){if(mode==='replace'){DB.tasks=data.tasks||[];DB.projects=data.projects||[];DB.tags=data.tags||[];DB.connections=data.connections||[];}else{if(data.tasks)DB.tasks=[...DB.tasks,...data.tasks.map(t=>({...t,id:DB.genId()}))];if(data.projects)DB.projects=[...DB.projects,...data.projects.map(p=>({...p,id:DB.genId()}))];if(data.tags)data.tags.forEach(t=>{if(!DB.tags.find(x=>x.name.toLowerCase()===t.name.toLowerCase()))DB.tags.push({...t,id:t.id||DB.genId()});});if(data.connections)DB.connections=[...DB.connections,...data.connections];}count=(data.tasks?.length||0)+(data.projects?.length||0);}else{const items=Array.isArray(data)?data:[data];const dt=type==='auto'?detectType(items):type;if(mode==='replace'){if(dt==='task')DB.tasks=[];if(dt==='project')DB.projects=[];if(dt==='tag')DB.tags=[];}items.forEach(item=>{const ni={...item,id:item.id||DB.genId()};if(dt==='task'){if(!DB.tasks.find(t=>t.name===item.name)){ni.created=ni.created||new Date().toISOString().split('T')[0];ni.incidents=ni.incidents||[];DB.tasks.push(ni);count++;}}else if(dt==='project'){if(!DB.projects.find(p=>p.name===item.name)){DB.projects.push(ni);count++;}}else if(dt==='tag'){if(!DB.tags.find(t=>t.name.toLowerCase()===item.name.toLowerCase())){DB.tags.push(ni);count++;}}else if(dt==='connection'){DB.connections.push(ni);count++;}});}DB.save();document.getElementById('jsonInput').value='';document.getElementById('jsonPreview').innerHTML='';showToast('Importado',count+' elementos');renderAdminStats();}
+function detectType(items){if(!items.length)return'task';const i=items[0];if(i.source&&i.target)return'connection';if(i.color&&!i.status&&!i.assignee)return i.start!==undefined?'project':'tag';return'task';}
+
+function loadTemplate(type){const t={task:JSON.stringify([{"name":"Nueva tarea","status":"pendiente","priority":"media","assignee":"Carlos Méndez","dueDate":"2025-04-01","tags":["marketing"],"stage":"planificacion","desc":"Descripción","progress":0}],null,2),project:JSON.stringify([{"name":"Nuevo Proyecto","desc":"Descripción","start":"2025-03-01","end":"2025-06-30","owner":"Carlos Méndez","color":"#0066ff"}],null,2),tag:JSON.stringify([{"name":"Nueva Etiqueta","color":"#dc2626","desc":"Descripción"}],null,2),connection:JSON.stringify([{"source":"id_origen","target":"id_destino","type":"dependencia","notes":"Nota"}],null,2),full:JSON.stringify({"tags":[{"name":"Marketing","color":"#dc2626","desc":"Marketing"},{"name":"Código","color":"#3b82f6","desc":"Desarrollo"}],"projects":[{"name":"Campaña Q1","desc":"Campaña Q1","start":"2025-01-01","end":"2025-03-31","owner":"Ana","color":"#dc2626"}],"tasks":[{"name":"Diseñar posts","status":"pendiente","priority":"alta","assignee":"Ana","dueDate":"2025-02-15","tags":["Marketing"],"stage":"planificacion","desc":"Posts","progress":0}],"connections":[]},null,2),bulk:JSON.stringify([{"name":"Tarea 1","status":"pendiente","priority":"alta","assignee":"Carlos","dueDate":"2025-03-01","tags":["marketing"],"stage":"planificacion","desc":"Desc","progress":0}],null,2)};document.getElementById('jsonInput').value=t[type]||'';switchTab('json');showToast('Template cargado','Edita y haz clic en Importar','info');}
+
+function handleCsvFile(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=function(ev){document.getElementById('csvInput').value=ev.target.result;showToast('CSV cargado',f.name);};r.readAsText(f);}
+function parseCSV(text,sep){const s=sep==='\\t'?'\t':sep;const lines=text.trim().split('\n');if(lines.length<2)return{headers:[],rows:[]};const h=lines[0].split(s).map(x=>x.trim().replace(/^["']|["']$/g,''));const rows=[];for(let i=1;i<lines.length;i++){if(!lines[i].trim())continue;const v=lines[i].split(s).map(x=>x.trim().replace(/^["']|["']$/g,''));const row={};h.forEach((k,idx)=>{row[k]=v[idx]||'';});rows.push(row);}return{headers:h,rows};}
+function previewCSV(){const text=document.getElementById('csvInput').value;if(!text.trim()){showToast('Error','Pega CSV primero','warning');return;}const sep=document.getElementById('csvSeparator').value,{headers,rows}=parseCSV(text,sep);if(!rows.length){showToast('Error','Sin filas','error');return;}let h=`<h4 class="text-sm font-bold mb-3">Vista Previa (${rows.length} filas)</h4><div class="overflow-x-auto"><table class="preview-table"><tr>${headers.map(x=>`<th>${x}</th>`).join('')}</tr>`;rows.slice(0,5).forEach(row=>{h+=`<tr>${headers.map(x=>`<td>${row[x]||''}</td>`).join('')}</tr>`;});h+='</table></div>';if(rows.length>5)h+=`<p class="text-xs" style="color:var(--muted)">...y ${rows.length-5} más</p>`;document.getElementById('csvPreview').innerHTML=h;}
+function importCSV(){const text=document.getElementById('csvInput').value;if(!text.trim()){showToast('Error','Pega CSV primero','warning');return;}const sep=document.getElementById('csvSeparator').value,type=document.getElementById('csvType').value,{headers,rows}=parseCSV(text,sep);if(!rows.length){showToast('Error','Sin filas','error');return;}let count=0;rows.forEach(row=>{if(type==='task'){const tagIds=(row.tags||'').split(/[;,|]/).map(t=>t.trim()).filter(t=>t).map(tn=>{const ex=DB.tags.find(x=>x.name.toLowerCase()===tn.toLowerCase());if(ex)return ex.id;const nt=DB.addTag({name:tn,color:'#'+Math.floor(Math.random()*16777215).toString(16).padStart(6,'0'),desc:''});return nt.id;});DB.addTask({name:row.name||'Sin nombre',desc:row.desc||'',status:row.status||'pendiente',priority:row.priority||'media',assignee:row.assignee||'Sin asignar',dueDate:row.dueDate||'',projectId:row.projectId||'',tags:tagIds,stage:row.stage||'planificacion',progress:row.progress?parseInt(row.progress):0,incidents:[]});count++;}else if(type==='project'){DB.addProject({name:row.name||'Sin nombre',desc:row.desc||'',start:row.start||'',end:row.end||'',owner:row.owner||'',color:row.color||'#0066ff'});count++;}else if(type==='tag'){const n=row.name||'Sin nombre';if(!DB.tags.find(t=>t.name.toLowerCase()===n.toLowerCase())){DB.addTag({name:n,color:row.color||'#'+Math.floor(Math.random()*16777215).toString(16).padStart(6,'0'),desc:row.desc||''});count++;}}});DB.save();document.getElementById('csvInput').value='';document.getElementById('csvPreview').innerHTML='';showToast('CSV importado',count+' elementos');renderAdminStats();}
+
+function handleJsonFile(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=function(ev){try{processFileData(JSON.parse(ev.target.result),f.name);}catch(err){showToast('Error','JSON inválido','error');}};r.readAsText(f);}
+function handleFileDrop(e){e.preventDefault();e.target.closest('.drop-zone')?.classList.remove('dragover');const f=e.dataTransfer.files[0];if(f&&f.name.endsWith('.json')){const r=new FileReader();r.onload=function(ev){try{processFileData(JSON.parse(ev.target.result),f.name);}catch(err){showToast('Error','JSON inválido','error');}};r.readAsText(f);}else{showToast('Error','Solo .json','error');}}
+function processFileData(data,filename){const el=document.getElementById('filePreview');let summary=[];if(data.tasks)summary.push(`📋 ${data.tasks.length} tareas`);if(data.projects)summary.push(`📁 ${data.projects.length} proyectos`);if(data.tags)summary.push(`🏷️ ${data.tags.length} etiquetas`);if(data.connections)summary.push(`🔗 ${data.connections.length} conexiones`);el.innerHTML=`<div class="card p-4 mb-4 fade-in"><h4 class="text-sm font-bold mb-2">📄 ${filename}</h4><div class="flex flex-wrap gap-2 mb-4">${summary.map(s=>`<span class="badge badge-blue">${s}</span>`).join('')}</div><div class="flex gap-2"><button onclick="confirmFileImport()" class="btn btn-primary">✅ Importar</button><button onclick="document.getElementById('filePreview').innerHTML=''" class="btn btn-secondary">Cancelar</button></div></div>`;window._pendingData=data;}
+function confirmFileImport(){const data=window._pendingData;if(!data)return;if(data.tasks)DB.tasks=[...DB.tasks,...data.tasks.map(t=>({...t,id:DB.genId()}))];if(data.projects)DB.projects=[...DB.projects,...data.projects.map(p=>({...p,id:DB.genId()}))];if(data.tags)data.tags.forEach(t=>{if(!DB.tags.find(x=>x.name.toLowerCase()===t.name.toLowerCase()))DB.tags.push({...t,id:t.id||DB.genId()});});if(data.connections)DB.connections=[...DB.connections,...data.connections];DB.save();document.getElementById('filePreview').innerHTML='';window._pendingData=null;showToast('Importado','Datos restaurados');renderAdminStats();}
+
+function previewBulk(){const text=document.getElementById('bulkInput').value.trim();if(!text){showToast('Error','Escribe datos primero','warning');return;}const lines=text.split('\n').filter(l=>l.trim());let h=`<h4 class="text-sm font-bold mb-3">${lines.length} tareas</h4><div class="overflow-x-auto"><table class="preview-table"><tr><th>#</th><th>Nombre</th><th>Estado</th><th>Prioridad</th><th>Asignado</th><th>Fecha</th><th>Etiquetas</th></tr>`;lines.slice(0,10).forEach((l,i)=>{const p=l.split('|').map(x=>x.trim());h+=`<tr><td>${i+1}</td><td>${p[0]||'-'}</td><td>${p[1]||'pendiente'}</td><td>${p[2]||'-'}</td><td>${p[3]||'-'}</td><td>${p[4]||'-'}</td><td>${p[5]||'-'}</td></tr>`;});h+='</table></div>';if(lines.length>10)h+=`<p class="text-xs" style="color:var(--muted)">...y ${lines.length-10} más</p>`;document.getElementById('bulkPreview').innerHTML=h;}
+function importBulk(){const text=document.getElementById('bulkInput').value.trim();if(!text){showToast('Error','Escribe datos','warning');return;}const lines=text.split('\n').filter(l=>l.trim());let count=0;lines.forEach(line=>{const p=line.split('|').map(x=>x.trim());const [name,status,priority,assignee,dueDate,tagsRaw,stage,desc]=p;const tagIds=(tagsRaw||'').split(/[;,]/).map(t=>t.trim()).filter(t=>t).map(tn=>{const ex=DB.tags.find(x=>x.name.toLowerCase()===tn.toLowerCase());if(ex)return ex.id;const nt=DB.addTag({name:tn,color:'#'+Math.floor(Math.random()*16777215).toString(16).padStart(6,'0'),desc:''});return nt.id;});DB.addTask({name:name||'Sin nombre',desc:desc||'',status:status||'pendiente',priority:priority||'media',assignee:assignee||'Sin asignar',dueDate:dueDate||'',projectId:'',tags:tagIds,stage:stage||'planificacion',progress:status==='completado'?100:0,incidents:[]});count++;});DB.save();document.getElementById('bulkInput').value='';document.getElementById('bulkPreview').innerHTML='';showToast('Masiva exitosa',count+' tareas importadas');renderAdminStats();}
+
+function importPreset(type){const presets={marketing:{tags:[{id:'tag_m1',name:'Marketing',color:'#dc2626',desc:'Marketing'},{id:'tag_m2',name:'Redes',color:'#22c55e',desc:'Redes sociales'},{id:'tag_m3',name:'SEO',color:'#3b82f6',desc:'SEO'},{id:'tag_m4',name:'Email',color:'#a855f7',desc:'Email'},{id:'tag_m5',name:'Ads',color:'#f59e0b',desc:'Ads'}],projects:[{id:'p_m1',name:'Campaña Redes Q1',desc:'Gestión redes Q1',start:'2025-01-15',end:'2025-03-31',owner:'Ana Rodríguez',color:'#dc2626'},{id:'p_m2',name:'Estrategia SEO',desc:'Posicionamiento orgánico',start:'2025-02-01',end:'2025-06-30',owner:'Miguel Torres',color:'#3b82f6'}],tasks:[{id:'t_m1',name:'Calendario Instagram',desc:'Planificar posts',status:'en-progreso',priority:'alta',assignee:'Ana Rodríguez',dueDate:'2025-01-20',projectId:'p_m1',tags:['tag_m1','tag_m2'],stage:'planificacion',progress:60,created:'2025-01-10',incidents:[]},{id:'t_m2',name:'Diseñar stories',desc:'Templates stories',status:'pendiente',priority:'media',assignee:'Laura Vargas',dueDate:'2025-02-01',projectId:'p_m1',tags:['tag_m1','tag_m2'],stage:'planificacion',progress:0,created:'2025-01-12',incidents:[]},{id:'t_m3',name:'Auditoría SEO',desc:'Analizar errores SEO',status:'en-progreso',priority:'alta',assignee:'Miguel Torres',dueDate:'2025-02-15',projectId:'p_m2',tags:['tag_m3'],stage:'desarrollo',progress:45,created:'2025-01-15',incidents:[{date:'2025-01-20',type:'bug',desc:'Errores de indexación'}]},{id:'t_m4',name:'Optimizar meta tags',desc:'Actualizar title y description',status:'pendiente',priority:'alta',assignee:'Carlos Méndez',dueDate:'2025-02-28',projectId:'p_m2',tags:['tag_m3'],stage:'planificacion',progress:0,created:'2025-01-18',incidents:[]},{id:'t_m5',name:'Campaña email',desc:'Emails bienvenida',status:'revision',priority:'alta',assignee:'Ana Rodríguez',dueDate:'2025-02-10',projectId:'p_m1',tags:['tag_m4','tag_m1'],stage:'revision',progress:80,created:'2025-01-08',incidents:[]},{id:'t_m6',name:'Google Ads',desc:'Campañas búsqueda',status:'pendiente',priority:'alta',assignee:'Pedro Castillo',dueDate:'2025-03-01',projectId:'p_m1',tags:['tag_m5','tag_m1'],stage:'planificacion',progress:0,created:'2025-01-20',incidents:[]},{id:'t_m7',name:'Landing page',desc:'Landing Whey Protein',status:'en-progreso',priority:'alta',assignee:'Carlos Méndez',dueDate:'2025-02-20',projectId:'p_m1',tags:['tag_m1'],stage:'desarrollo',progress:35,created:'2025-01-22',incidents:[]},{id:'t_m8',name:'Análisis competencia',desc:'Investigar competidores',status:'completado',priority:'media',assignee:'Laura Vargas',dueDate:'2025-01-25',projectId:'p_m2',tags:['tag_m3','tag_m1'],stage:'seguimiento',progress:100,created:'2025-01-05',incidents:[]},{id:'t_m9',name:'Newsletter febrero',desc:'Newsletter mensual',status:'pendiente',priority:'media',assignee:'Ana Rodríguez',dueDate:'2025-02-25',projectId:'p_m1',tags:['tag_m4'],stage:'planificacion',progress:0,created:'2025-01-25',incidents:[]},{id:'t_m10',name:'Video Reels',desc:'Reels de productos',status:'pendiente',priority:'alta',assignee:'Laura Vargas',dueDate:'2025-02-15',projectId:'p_m1',tags:['tag_m2','tag_m1'],stage:'planificacion',progress:0,created:'2025-01-28',incidents:[]},{id:'t_m11',name:'Link building',desc:'Backlinks calidad',status:'en-progreso',priority:'media',assignee:'Miguel Torres',dueDate:'2025-04-01',projectId:'p_m2',tags:['tag_m3'],stage:'desarrollo',progress:20,created:'2025-02-01',incidents:[]},{id:'t_m12',name:'Reporte métricas',desc:'Informe KPIs',status:'pendiente',priority:'baja',assignee:'Pedro Castillo',dueDate:'2025-03-05',projectId:'p_m1',tags:['tag_m1'],stage:'seguimiento',progress:0,created:'2025-02-01',incidents:[]}],connections:[{id:'c_m1',source:'t_m3',target:'t_m4',type:'dependencia',notes:'Optimización depende de auditoría'}]},dev:{tags:[{id:'tag_d1',name:'Frontend',color:'#3b82f6',desc:'Frontend'},{id:'tag_d2',name:'Backend',color:'#22c55e',desc:'Backend'},{id:'tag_d3',name:'Base de Datos',color:'#a855f7',desc:'BD'},{id:'tag_d4',name:'API',color:'#f59e0b',desc:'APIs'},{id:'tag_d5',name:'DevOps',color:'#dc2626',desc:'DevOps'}],projects:[{id:'p_d1',name:'Rediseño E-commerce',desc:'Actualización sitio',start:'2025-01-01',end:'2025-04-30',owner:'Carlos Méndez',color:'#3b82f6'},{id:'p_d2',name:'App Móvil',desc:'App iOS y Android',start:'2025-03-01',end:'2025-08-31',owner:'Miguel Torres',color:'#22c55e'}],tasks:[{id:'t_d1',name:'Diseñar UI/UX',desc:'Wireframes',status:'completado',priority:'alta',assignee:'Laura Vargas',dueDate:'2025-01-31',projectId:'p_d1',tags:['tag_d1'],stage:'implementacion',progress:100,created:'2025-01-01',incidents:[]},{id:'t_d2',name:'Componentes React',desc:'Biblioteca componentes',status:'en-progreso',priority:'alta',assignee:'Carlos Méndez',dueDate:'2025-02-28',projectId:'p_d1',tags:['tag_d1'],stage:'desarrollo',progress:55,created:'2025-01-15',incidents:[]},{id:'t_d3',name:'Pasarela de pagos',desc:'Stripe y PayPal',status:'pendiente',priority:'alta',assignee:'Carlos Méndez',dueDate:'2025-03-15',projectId:'p_d1',tags:['tag_d2','tag_d4'],stage:'planificacion',progress:0,created:'2025-01-20',incidents:[]},{id:'t_d4',name:'Migrar BD',desc:'MySQL a PostgreSQL',status:'en-progreso',priority:'media',assignee:'Miguel Torres',dueDate:'2025-02-15',projectId:'p_d1',tags:['tag_d3'],stage:'desarrollo',progress:30,created:'2025-01-10',incidents:[{date:'2025-01-25',type:'bug',desc:'Error compatibilidad'}]},{id:'t_d5',name:'CI/CD pipeline',desc:'Automatizar despliegues',status:'pendiente',priority:'media',assignee:'Miguel Torres',dueDate:'2025-03-01',projectId:'p_d1',tags:['tag_d5'],stage:'planificacion',progress:0,created:'2025-01-25',incidents:[]},{id:'t_d6',name:'API inventario',desc:'Endpoints CRUD',status:'en-progreso',priority:'alta',assignee:'Carlos Méndez',dueDate:'2025-02-20',projectId:'p_d1',tags:['tag_d4','tag_d2'],stage:'desarrollo',progress:40,created:'2025-01-12',incidents:[]},{id:'t_d7',name:'Optimizar rendimiento',desc:'Mejorar carga',status:'pendiente',priority:'media',assignee:'Carlos Méndez',dueDate:'2025-03-30',projectId:'p_d1',tags:['tag_d1'],stage:'planificacion',progress:0,created:'2025-01-28',incidents:[]},{id:'t_d8',name:'Tests unitarios',desc:'Cobertura >80%',status:'pendiente',priority:'baja',assignee:'Miguel Torres',dueDate:'2025-04-01',projectId:'p_d1',tags:['tag_d2'],stage:'planificacion',progress:0,created:'2025-01-30',incidents:[]},{id:'t_d9',name:'Diseño app móvil',desc:'Prototipo Figma',status:'pendiente',priority:'alta',assignee:'Laura Vargas',dueDate:'2025-04-15',projectId:'p_d2',tags:['tag_d1'],stage:'planificacion',progress:0,created:'2025-02-01',incidents:[]},{id:'t_d10',name:'API app móvil',desc:'API para app',status:'pendiente',priority:'alta',assignee:'Carlos Méndez',dueDate:'2025-05-01',projectId:'p_d2',tags:['tag_d4','tag_d2'],stage:'planificacion',progress:0,created:'2025-02-01',incidents:[]}],connections:[{id:'c_d1',source:'t_d1',target:'t_d2',type:'dependencia',notes:'Componentes basados en diseño'},{id:'c_d2',source:'t_d6',target:'t_d3',type:'dependencia',notes:'Pasarela necesita API inventario'}]}};if(type==='full'){const m=presets.marketing,d=presets.dev;importPresetData({tags:[...m.tags,...d.tags],projects:[...m.projects,...d.projects],tasks:[...m.tasks,...d.tasks],connections:[...m.connections,...d.connections]},'Set Completo');}else{importPresetData(presets[type],type==='marketing'?'Marketing Digital':'Desarrollo Web');}}
+
+function importPresetData(data,name){let nt=0,np=0,nc=0;data.tags.forEach(t=>{if(!DB.tags.find(x=>x.name.toLowerCase()===t.name.toLowerCase())){DB.tags.push(t);nt++;}});data.projects.forEach(p=>{if(!DB.projects.find(x=>x.name.toLowerCase()===p.name.toLowerCase())){DB.projects.push(p);np++;}});data.tasks.forEach(t=>{if(!DB.tasks.find(x=>x.name.toLowerCase()===t.name.toLowerCase())){DB.tasks.push(t);nc++;}});data.connections.forEach(c=>{DB.connections.push(c);});DB.save();showToast(`"${name}" importado`,`${np} proyectos, ${nc} tareas, ${nt} etiquetas`);renderAdminStats();}
+
+function loadSampleData(){importPreset('full');}
+
+Utils.initTheme();renderAdminStats();
+const csvDropZone=document.getElementById('csvDropZone');if(csvDropZone){csvDropZone.addEventListener('dragover',function(e){e.preventDefault();this.classList.add('dragover');});csvDropZone.addEventListener('dragleave',function(){this.classList.remove('dragover');});csvDropZone.addEventListener('drop',function(e){e.preventDefault();this.classList.remove('dragover');const f=e.dataTransfer.files[0];if(f&&f.name.endsWith('.csv')){const r=new FileReader();r.onload=function(ev){document.getElementById('csvInput').value=ev.target.result;showToast('CSV cargado',f.name);};r.readAsText(f);}else{showToast('Error','Solo .csv','error');}});}
+</script>
+</body>
+</html>
+

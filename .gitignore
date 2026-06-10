@@ -1,0 +1,12 @@
+# OS
+Thumbs.db
+.DS_Store
+*.swp
+
+# IDE
+.vscode/
+.idea/
+*.sublime-*
+
+# Local config (contains API keys)
+shared/config.local.js

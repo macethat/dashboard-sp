@@ -1,0 +1,260 @@
+const DB = {
+  tasks: [],
+  projects: [],
+  tags: [],
+  connections: [],
+  reports: [],
+
+  init() {
+    this.tasks = this._load('sp_tasks') || [];
+    this.projects = this._load('sp_projects') || [];
+    this.tags = this._load('sp_tags') || [];
+    this.connections = this._load('sp_connections') || [];
+    this.reports = this._load('sp_reports') || [];
+    this._supabaseReady = false;
+    if (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.supabase.enabled) {
+      this._initSupabase();
+    }
+  },
+
+  _load(key) {
+    try {
+      const data = localStorage.getItem(key);
+      return data ? JSON.parse(data) : null;
+    } catch (e) {
+      return null;
+    }
+  },
+
+  save() {
+    localStorage.setItem('sp_tasks', JSON.stringify(this.tasks));
+    localStorage.setItem('sp_projects', JSON.stringify(this.projects));
+    localStorage.setItem('sp_tags', JSON.stringify(this.tags));
+    localStorage.setItem('sp_connections', JSON.stringify(this.connections));
+    localStorage.setItem('sp_reports', JSON.stringify(this.reports));
+    if (this._supabaseReady) this._syncToSupabase();
+  },
+
+  genId() {
+    return 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+  },
+
+  addTask(task) {
+    task.id = task.id || this.genId();
+    task.created = task.created || new Date().toISOString().split('T')[0];
+    task.progress = typeof task.progress === 'number' ? task.progress : 0;
+    task.incidents = task.incidents || [];
+    this.tasks.push(task);
+    this.save();
+    return task;
+  },
+
+  updateTask(id, data) {
+    const index = this.tasks.findIndex(t => t.id === id);
+    if (index !== -1) {
+      const oldStatus = this.tasks[index].status;
+      this.tasks[index] = { ...this.tasks[index], ...data };
+      if (oldStatus !== data.status && data.status) {
+        if (!this.tasks[index].incidents) this.tasks[index].incidents = [];
+        this.tasks[index].incidents.push({
+          date: new Date().toISOString().split('T')[0],
+          type: 'estado',
+          desc: 'Estado cambiado a "' + this._getStatusLabel(data.status) + '"'
+        });
+      }
+      this.save();
+    }
+  },
+
+  deleteTask(id) {
+    this.tasks = this.tasks.filter(t => t.id !== id);
+    this.connections = this.connections.filter(c => c.source !== id && c.target !== id);
+    this.save();
+  },
+
+  getTask(id) {
+    return this.tasks.find(t => t.id === id);
+  },
+
+  addProject(project) {
+    project.id = project.id || this.genId();
+    this.projects.push(project);
+    this.save();
+    return project;
+  },
+
+  updateProject(id, data) {
+    const index = this.projects.findIndex(p => p.id === id);
+    if (index !== -1) {
+      this.projects[index] = { ...this.projects[index], ...data };
+      this.save();
+    }
+  },
+
+  deleteProject(id) {
+    this.projects = this.projects.filter(p => p.id !== id);
+    this.tasks.forEach(t => { if (t.projectId === id) t.projectId = ''; });
+    this.save();
+  },
+
+  addTag(tag) {
+    tag.id = tag.id || this.genId();
+    this.tags.push(tag);
+    this.save();
+    return tag;
+  },
+
+  updateTag(id, data) {
+    const index = this.tags.findIndex(t => t.id === id);
+    if (index !== -1) {
+      this.tags[index] = { ...this.tags[index], ...data };
+      this.save();
+    }
+  },
+
+  deleteTag(id) {
+    this.tags = this.tags.filter(t => t.id !== id);
+    this.tasks.forEach(t => {
+      if (t.tags) t.tags = t.tags.filter(tid => tid !== id);
+    });
+    this.save();
+  },
+
+  addConnection(conn) {
+    conn.id = conn.id || this.genId();
+    this.connections.push(conn);
+    this.save();
+    return conn;
+  },
+
+  deleteConnection(id) {
+    this.connections = this.connections.filter(c => c.id !== id);
+    this.save();
+  },
+
+  addReport(report) {
+    report.id = report.id || this.genId();
+    report.date = report.date || new Date().toISOString();
+    this.reports.push(report);
+    this.save();
+    return report;
+  },
+
+  deleteReport(id) {
+    this.reports = this.reports.filter(r => r.id !== id);
+    this.save();
+  },
+
+  exportData() {
+    return {
+      tasks: this.tasks,
+      projects: this.projects,
+      tags: this.tags,
+      connections: this.connections,
+      reports: this.reports,
+      exportDate: new Date().toISOString()
+    };
+  },
+
+  importData(data) {
+    if (data.tasks) this.tasks = data.tasks;
+    if (data.projects) this.projects = data.projects;
+    if (data.tags) this.tags = data.tags;
+    if (data.connections) this.connections = data.connections;
+    if (data.reports) this.reports = data.reports;
+    this.save();
+  },
+
+  clearAll() {
+    this.tasks = [];
+    this.projects = [];
+    this.tags = [];
+    this.connections = [];
+    this.reports = [];
+    this.save();
+  },
+
+  getStats() {
+    const total = this.tasks.length;
+    const completed = this.tasks.filter(t => t.status === 'completado').length;
+    const inProgress = this.tasks.filter(t => t.status === 'en-progreso').length;
+    const pending = this.tasks.filter(t => t.status === 'pendiente').length;
+    const review = this.tasks.filter(t => t.status === 'revision').length;
+    const cancelled = this.tasks.filter(t => t.status === 'cancelado').length;
+    const totalIncidents = this.tasks.reduce((sum, t) => sum + (t.incidents ? t.incidents.length : 0), 0);
+    return {
+      totalTasks: total,
+      completed,
+      inProgress,
+      pending,
+      review,
+      cancelled,
+      totalProjects: this.projects.length,
+      totalTags: this.tags.length,
+      totalConnections: this.connections.length,
+      totalReports: this.reports.length,
+      totalIncidents,
+      overallProgress: total > 0 ? Math.round((completed / total) * 100) : 0
+    };
+  },
+
+  _getStatusLabel(status) {
+    const labels = {
+      'pendiente': 'Pendiente',
+      'en-progreso': 'En Progreso',
+      'revision': 'En Revisión',
+      'completado': 'Completado',
+      'cancelado': 'Cancelado'
+    };
+    return labels[status] || status;
+  },
+
+  _initSupabase() {
+    try {
+      const cfg = APP_CONFIG.supabase;
+      if (!cfg.url || !cfg.anonKey) return;
+      const script = document.createElement('script');
+      script.src = 'https://unpkg.com/@supabase/supabase-js@2';
+      script.onload = () => {
+        this._supabase = supabase.createClient(cfg.url, cfg.anonKey);
+        this._supabaseReady = true;
+        this._syncFromSupabase();
+      };
+      document.head.appendChild(script);
+    } catch (e) {
+      console.warn('Supabase init failed:', e);
+    }
+  },
+
+  async _syncToSupabase() {
+    try {
+      const tables = ['tasks', 'projects', 'tags', 'connections', 'reports'];
+      for (const table of tables) {
+        const { error } = await this._supabase.from(table).upsert(
+          this[table].map(row => ({ ...row, updated_at: new Date().toISOString() })),
+          { onConflict: 'id' }
+        );
+        if (error) console.warn('Supabase sync error (' + table + '):', error);
+      }
+    } catch (e) {
+      console.warn('Supabase sync failed:', e);
+    }
+  },
+
+  async _syncFromSupabase() {
+    try {
+      const tables = ['tasks', 'projects', 'tags', 'connections', 'reports'];
+      for (const table of tables) {
+        const { data, error } = await this._supabase.from(table).select('*');
+        if (!error && data && data.length) {
+          this[table] = data.map(({ updated_at, ...rest }) => rest);
+        }
+      }
+      this.save();
+    } catch (e) {
+      console.warn('Supabase sync from failed:', e);
+    }
+  }
+};
+
+DB.init();
