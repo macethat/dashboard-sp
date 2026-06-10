@@ -231,21 +231,48 @@ const DB = {
     };
   },
 
+  _sbMap(row, table) {
+    const m = { ...row, updated_at: new Date().toISOString() };
+    if (table === 'tasks') {
+      if (m.dueDate && !m.due_date) { m.due_date = m.dueDate; delete m.dueDate; }
+      if (m.projectId && !m.project_id) { m.project_id = m.projectId; delete m.projectId; }
+    }
+    return m;
+  },
+
   async _syncToSupabase() {
     try {
       const tables = ['tasks', 'projects', 'tags', 'connections', 'reports'];
       for (const table of tables) {
-        const rows = this[table].map(r => ({ ...r, updated_at: new Date().toISOString() }));
+        const rows = this[table].map(r => this._sbMap(r, table));
         if (!rows.length) continue;
-        await fetch(this._sbUrl + '/' + table, {
+        const res = await fetch(this._sbUrl + '/' + table, {
           method: 'POST',
           headers: { ...this._sbHeaders(), 'Prefer': 'resolution=merge-duplicates' },
           body: JSON.stringify(rows)
         });
+        if (!res.ok) {
+          const text = await res.text();
+          console.warn('Supabase sync error (' + table + '):', res.status, text);
+        }
       }
     } catch (e) {
       console.warn('Supabase sync failed:', e);
     }
+  },
+
+  _sbUnmap(row, table) {
+    const m = { ...row };
+    delete m.updated_at;
+    if (table === 'tasks') {
+      if (m.due_date && !m.dueDate) { m.dueDate = m.due_date; delete m.due_date; }
+      if (m.project_id && !m.projectId) { m.projectId = m.project_id; delete m.project_id; }
+    }
+    if (table === 'projects') {
+      if (m.start && !m.start) { }
+      if (m.end && !m.end) { }
+    }
+    return m;
   },
 
   async _syncFromSupabase() {
@@ -258,7 +285,7 @@ const DB = {
         if (!res.ok) continue;
         const data = await res.json();
         if (data && data.length) {
-          this[table] = data.map(({ updated_at, ...rest }) => rest);
+          this[table] = data.map(r => this._sbUnmap(r, table));
         }
       }
       this.save();
