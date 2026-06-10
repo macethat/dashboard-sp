@@ -213,28 +213,35 @@ const DB = {
     try {
       const cfg = APP_CONFIG.supabase;
       if (!cfg.url || !cfg.anonKey) return;
-      const script = document.createElement('script');
-      script.src = 'https://unpkg.com/@supabase/supabase-js@2';
-      script.onload = () => {
-        this._supabase = supabase.createClient(cfg.url, cfg.anonKey);
-        this._supabaseReady = true;
-        this._syncFromSupabase();
-      };
-      document.head.appendChild(script);
+      this._sbUrl = cfg.url.replace(/\/+$/, '') + '/rest/v1';
+      this._sbKey = cfg.anonKey;
+      this._supabaseReady = true;
+      this._syncFromSupabase();
     } catch (e) {
       console.warn('Supabase init failed:', e);
     }
+  },
+
+  _sbHeaders() {
+    return {
+      'apikey': this._sbKey,
+      'Authorization': 'Bearer ' + this._sbKey,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal'
+    };
   },
 
   async _syncToSupabase() {
     try {
       const tables = ['tasks', 'projects', 'tags', 'connections', 'reports'];
       for (const table of tables) {
-        const { error } = await this._supabase.from(table).upsert(
-          this[table].map(row => ({ ...row, updated_at: new Date().toISOString() })),
-          { onConflict: 'id' }
-        );
-        if (error) console.warn('Supabase sync error (' + table + '):', error);
+        const rows = this[table].map(r => ({ ...r, updated_at: new Date().toISOString() }));
+        if (!rows.length) continue;
+        await fetch(this._sbUrl + '/' + table, {
+          method: 'POST',
+          headers: { ...this._sbHeaders(), 'Prefer': 'resolution=merge-duplicates' },
+          body: JSON.stringify(rows)
+        });
       }
     } catch (e) {
       console.warn('Supabase sync failed:', e);
@@ -245,8 +252,12 @@ const DB = {
     try {
       const tables = ['tasks', 'projects', 'tags', 'connections', 'reports'];
       for (const table of tables) {
-        const { data, error } = await this._supabase.from(table).select('*');
-        if (!error && data && data.length) {
+        const res = await fetch(this._sbUrl + '/' + table + '?select=*', {
+          headers: this._sbHeaders()
+        });
+        if (!res.ok) continue;
+        const data = await res.json();
+        if (data && data.length) {
           this[table] = data.map(({ updated_at, ...rest }) => rest);
         }
       }
