@@ -56,11 +56,13 @@ DROP POLICY IF EXISTS "Tasks select" ON tasks;
 DROP POLICY IF EXISTS "Tasks insert" ON tasks;
 DROP POLICY IF EXISTS "Tasks update" ON tasks;
 DROP POLICY IF EXISTS "Tasks delete" ON tasks;
--- SELECT: admin/supervisor/editor see ALL; viewers see only their department
+-- SELECT: admin/supervisor see ALL; editors see only own; viewers see only their department
+DROP POLICY IF EXISTS "Tasks select" ON tasks;
 CREATE POLICY "Tasks select" ON tasks FOR SELECT
   USING (
     auth.role() = 'service_role' OR
-    auth.jwt() -> 'user_metadata' ->> 'role' IN ('admin', 'supervisor', 'editor') OR
+    auth.jwt() -> 'user_metadata' ->> 'role' IN ('admin', 'supervisor') OR
+    (auth.jwt() -> 'user_metadata' ->> 'role' = 'editor' AND created_by = auth.uid()) OR
     department = COALESCE(auth.jwt() -> 'user_metadata' ->> 'department', '')
   );
 -- INSERT: only admin/editor
@@ -79,10 +81,12 @@ DROP POLICY IF EXISTS "Projects select" ON projects;
 DROP POLICY IF EXISTS "Projects insert" ON projects;
 DROP POLICY IF EXISTS "Projects update" ON projects;
 DROP POLICY IF EXISTS "Projects delete" ON projects;
+DROP POLICY IF EXISTS "Projects select" ON projects;
 CREATE POLICY "Projects select" ON projects FOR SELECT
   USING (
     auth.role() = 'service_role' OR
-    auth.jwt() -> 'user_metadata' ->> 'role' IN ('admin', 'supervisor', 'editor') OR
+    auth.jwt() -> 'user_metadata' ->> 'role' IN ('admin', 'supervisor') OR
+    (auth.jwt() -> 'user_metadata' ->> 'role' = 'editor' AND created_by = auth.uid()) OR
     department = COALESCE(auth.jwt() -> 'user_metadata' ->> 'department', '')
   );
 CREATE POLICY "Projects insert" ON projects FOR INSERT
