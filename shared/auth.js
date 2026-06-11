@@ -106,6 +106,10 @@ const Auth = {
     return this._profile?.role === 'admin';
   },
 
+  isSupervisor() {
+    return this._profile?.role === 'supervisor';
+  },
+
   canEdit() {
     return this._profile?.role === 'admin' || this._profile?.role === 'editor';
   },
