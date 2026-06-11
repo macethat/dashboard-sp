@@ -156,6 +156,20 @@ const Auth = {
     this._listeners.forEach(fn => fn(this._session ? this._profile : null));
   },
 
+  async changePassword(newPassword) {
+    if (!this._session) throw new Error('No hay sesión activa');
+    const res = await fetch(this._baseUrl + '/user', {
+      method: 'PUT',
+      headers: this._headers(true),
+      body: JSON.stringify({ password: newPassword })
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.msg || err.error_description || 'Error al cambiar contraseña');
+    }
+    return true;
+  },
+
   async refreshSession() {
     if (!this._session?.refresh_token) return false;
     try {
