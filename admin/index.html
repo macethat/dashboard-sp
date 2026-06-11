@@ -26,7 +26,7 @@ label{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px;displa
 .tab-btn{padding:10px 20px;font-size:14px;font-weight:500;border:none;background:transparent;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;}.tab-btn.active{color:#0066ff;border-bottom-color:#0066ff;}.tab-btn:hover{color:var(--text);}
 .drop-zone{border:2px dashed #cbd5e1;border-radius:12px;padding:40px;text-align:center;transition:all 0.3s;cursor:pointer;}.drop-zone:hover,.drop-zone.dragover{border-color:#0066ff;background:rgba(0,102,255,0.05);}
 .preview-table{width:100%;border-collapse:collapse;font-size:12px;}.preview-table th{background:var(--bg);padding:8px 12px;text-align:left;font-weight:600;color:var(--muted);border-bottom:2px solid var(--border);}.preview-table td{padding:8px 12px;border-bottom:1px solid var(--border);color:var(--text);}.preview-table tr:hover td{background:var(--bg);}
-@media(max-width:640px){.p-6{padding:12px!important;}.sp-logo{}.back-link{font-size:12px!important;}.tab-btn{font-size:12px!important;padding:8px 12px!important;}.preview-table{font-size:11px!important;}.preview-table th,.preview-table td{padding:6px 8px!important;}}
+@media(max-width:640px){.p-6{padding:12px!important;}.back-link{font-size:12px!important;}.tab-btn{font-size:12px!important;padding:8px 12px!important;}.preview-table{font-size:11px!important;}.preview-table th,.preview-table td{padding:6px 8px!important;}input,select,textarea{padding:10px 14px!important;}}
 .code-block{background:#1e293b;color:#e2e8f0;border-radius:8px;padding:16px;font-family:'Courier New',monospace;font-size:12px;overflow-x:auto;line-height:1.6;}
 .code-block .key{color:#7dd3fc;}.code-block .str{color:#86efac;}.code-block .num{color:#fbbf24;}.code-block .comment{color:#64748b;}
 .step{display:flex;gap:16px;align-items:flex-start;}.step-num{width:36px;height:36px;border-radius:50%;background:#0066ff;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;}.step.active .step-num{background:#22c55e;}
@@ -53,20 +53,21 @@ a.back-link:hover{color:var(--text);}
 <div class="max-w-6xl mx-auto p-6">
 <a href="../dashboard/index.html" class="back-link">← Volver al Dashboard</a>
 <div class="mb-8">
-<div class="flex items-center gap-3 mb-2">
+<div class="flex items-center gap-3 mb-1 flex-wrap">
 <div class="sp-logo"><span class="s">S</span><span class="p">P</span></div>
-<div class="flex-1"><h1 class="text-xl font-bold">Carga de Datos</h1><p class="text-sm" style="color:var(--muted)">Administra y carga datos al sistema de Suplementos Panamá</p></div>
+<h1 class="text-xl font-bold flex-1">Carga de Datos</h1>
 <button id="adminAuthBtn2" onclick="toggleAdminAuth()" class="btn btn-secondary btn-sm">🔓 Iniciar Sesión</button>
 </div>
+<p class="text-sm w-full" style="color:var(--muted)">Administra y carga datos al sistema de Suplementos Panamá</p>
 </div>
 
-<div class="flex gap-1 mb-6 border-b overflow-x-auto" style="border-color:var(--border)">
+<div class="flex gap-1 mb-6 border-b flex-wrap" style="border-color:var(--border)">
 <button class="tab-btn active" onclick="switchTab('manual')" id="tabManual">📝 Formulario</button>
 <button class="tab-btn" onclick="switchTab('json')" id="tabJson">{ } JSON</button>
 <button class="tab-btn" onclick="switchTab('csv')" id="tabCsv">📊 CSV</button>
 <button class="tab-btn" onclick="switchTab('file')" id="tabFile">📁 Archivo</button>
 <button class="tab-btn" onclick="switchTab('bulk')" id="tabBulk">⚡ Masiva</button>
-<button class="tab-btn" onclick="switchTab('guide')" id="tabGuide"> Guía</button>
+<button class="tab-btn" onclick="switchTab('guide')" id="tabGuide">📖 Guía</button>
 <button class="tab-btn" onclick="switchTab('users')" id="tabUsers">👥 Usuarios</button>
 </div>
 
