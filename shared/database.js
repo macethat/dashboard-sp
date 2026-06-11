@@ -8,11 +8,11 @@ const DB = {
   _currentProfile: null,
 
   init() {
-    this.tasks = this._load('sp_tasks') || [];
-    this.projects = this._load('sp_projects') || [];
-    this.tags = this._load('sp_tags') || [];
-    this.connections = this._load('sp_connections') || [];
-    this.reports = this._load('sp_reports') || [];
+    this.tasks = [];
+    this.projects = [];
+    this.tags = [];
+    this.connections = [];
+    this.reports = [];
     this._supabaseReady = false;
     if (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.supabase.enabled) {
       this._initSupabase();
@@ -24,21 +24,7 @@ const DB = {
     this._currentProfile = profile;
   },
 
-  _load(key) {
-    try {
-      const data = localStorage.getItem(key);
-      return data ? JSON.parse(data) : null;
-    } catch (e) {
-      return null;
-    }
-  },
-
   save() {
-    localStorage.setItem('sp_tasks', JSON.stringify(this.tasks));
-    localStorage.setItem('sp_projects', JSON.stringify(this.projects));
-    localStorage.setItem('sp_tags', JSON.stringify(this.tags));
-    localStorage.setItem('sp_connections', JSON.stringify(this.connections));
-    localStorage.setItem('sp_reports', JSON.stringify(this.reports));
     if (this._supabaseReady) this._syncToSupabase();
   },
 
@@ -176,13 +162,22 @@ const DB = {
     this.save();
   },
 
-  clearAll() {
+  async clearAll() {
     this.tasks = [];
     this.projects = [];
     this.tags = [];
     this.connections = [];
     this.reports = [];
-    this.save();
+    if (this._supabaseReady) {
+      for (const table of ['tasks','projects','tags','connections','reports']) {
+        try {
+          await fetch(this._sbUrl + '/' + table, {
+            method: 'DELETE',
+            headers: this._sbHeaders(!!this._currentUser)
+          });
+        } catch(e) {}
+      }
+    }
   },
 
   getStats() {
@@ -268,7 +263,7 @@ const DB = {
         if (!rows.length) continue;
         const res = await fetch(this._sbUrl + '/' + table, {
           method: 'POST',
-          headers: { ...this._sbHeaders(), 'Prefer': 'resolution=merge-duplicates' },
+          headers: { ...this._sbHeaders(!!this._currentUser), 'Prefer': 'resolution=merge-duplicates' },
           body: JSON.stringify(rows)
         });
         if (!res.ok) {
@@ -308,7 +303,6 @@ const DB = {
           this[table] = data.map(r => this._sbUnmap(r, table));
         }
       }
-      this.save();
     } catch (e) {
       console.warn('Supabase sync from failed:', e);
     }
