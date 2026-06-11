@@ -48,7 +48,7 @@ body{background:var(--bg);color:var(--text);}
 input,select,textarea{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--text);width:100%;font-family:inherit;}input:focus,select:focus,textarea:focus{outline:none;border-color:#0066ff;}
 label{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px;display:block;}
 .sp-logo-s{display:inline-flex;align-items:baseline;}.sp-logo-s .s{color:#dc2626;font-weight:900;font-style:italic;letter-spacing:-2px;font-size:2rem;}.sp-logo-s .p{color:var(--text);font-weight:900;font-style:italic;letter-spacing:-2px;font-size:2rem;margin-left:-3px;}
-@media(max-width:768px){.sidebar{transform:translateX(-100%);}.sidebar.open{transform:translateX(0);}.main{margin-left:0;}}
+@media(max-width:768px){.sidebar{transform:translateX(-100%);}.sidebar.open{transform:translateX(0);}.main{margin-left:0;}.sidebar-overlay{position:fixed;inset:0;z-index:99;background:rgba(0,0,0,0.3);display:none;}.sidebar-overlay.show{display:block;}header .btn,.header-select{font-size:11px!important;padding:4px 8px!important;}header .hidden-mobile{display:none!important;}header .header-right{gap:4px!important;}}
 @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}.fade-in{animation:fadeIn 0.3s ease;}
 .dropdown-menu{position:absolute;top:100%;right:0;background:var(--card);border:1px solid var(--border);border-radius:8px;box-shadow:0 10px 25px rgba(0,0,0,0.15);min-width:150px;z-index:50;display:none;}
 .dropdown-menu.show{display:block;}
@@ -87,18 +87,19 @@ label{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px;displa
 </nav>
 <div class="p-4 border-t" style="border-color:var(--border)"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-gradient-to-br from-red-500 to-blue-600 flex items-center justify-center text-white text-xs font-bold" id="sidebarAvatar">SP</div><div class="flex-1 min-w-0"><p id="sidebarName" class="text-sm font-semibold">Invitado</p><p id="sidebarDept" class="text-xs truncate" style="color:var(--muted)">Sin sesión</p></div><div id="sidebarStatus" class="w-2 h-2 rounded-full bg-gray-400"></div></div><button id="sidebarLogoutBtn" onclick="toggleAuth()" class="btn btn-secondary btn-sm mt-2 w-full" style="display:none">🔒 Cerrar sesión</button><button id="sidebarChangePwdBtn" onclick="showChangePwdModal()" class="btn btn-secondary btn-sm mt-1 w-full" style="display:none">🔑 Cambiar Contraseña</button></div>
 </aside>
+<div id="sidebarOverlay" class="sidebar-overlay" onclick="document.getElementById('sidebar').classList.remove('open');this.classList.remove('show')"></div>
 
 <main class="main">
-<header class="sticky top-0 z-40 flex items-center justify-between px-6 py-3" style="background:var(--card);border-bottom:1px solid var(--border);">
+<header class="sticky top-0 z-40 flex items-center justify-between px-6 py-3 flex-wrap gap-2" style="background:var(--card);border-bottom:1px solid var(--border);">
 <div class="flex items-center gap-4">
-<button onclick="document.getElementById('sidebar').classList.toggle('open')" class="p-2 rounded-lg hover:bg-gray-100 lg:hidden" style="color:var(--muted)">☰</button>
+<button onclick="document.getElementById('sidebar').classList.toggle('open');document.getElementById('sidebarOverlay').classList.toggle('show')" class="p-2 rounded-lg hover:bg-gray-100 lg:hidden" style="color:var(--muted)">☰</button>
 <div><h2 id="viewTitle" class="text-lg font-bold">Dashboard</h2><p id="viewSubtitle" class="text-xs" style="color:var(--muted)">Suplementos Panamá</p></div>
 </div>
-<div class="flex items-center gap-3">
+<div class="flex items-center gap-3 header-right">
 <div class="relative hidden md:block"><svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" style="color:var(--muted)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" placeholder="Buscar..." class="pl-9 pr-4 py-2 w-64 rounded-lg" style="font-size:13px" oninput="globalSearch(this.value)"></div>
-<button onclick="Utils.requestNotificationPermission()" class="btn btn-secondary btn-sm" title="Notificaciones">🔔 Notificaciones</button>
-<select id="themeSelect" onchange="Utils.changeTheme(this.value)" class="py-2 px-3 rounded-lg" style="font-size:12px;width:auto"><option value="light">☀️ Claro</option><option value="dark"> Oscuro</option><option value="auto"> Auto</option></select>
-<select id="specialistFilter" onchange="applySpecialistFilter()" class="py-2 px-3 rounded-lg" style="font-size:12px;width:auto;display:none"><option value="">Todos los especialistas</option></select>
+<button onclick="Utils.requestNotificationPermission()" class="btn btn-secondary btn-sm hidden-mobile" title="Notificaciones">🔔 Notificaciones</button>
+<select id="themeSelect" onchange="Utils.changeTheme(this.value)" class="py-2 px-3 rounded-lg header-select" style="font-size:12px;width:auto"><option value="light">☀️ Claro</option><option value="dark">🌙 Oscuro</option><option value="auto">⚙️ Auto</option></select>
+<select id="specialistFilter" onchange="applySpecialistFilter()" class="py-2 px-3 rounded-lg header-select" style="font-size:12px;width:auto;display:none"><option value="">Todos los especialistas</option></select>
 <button id="authBtn" onclick="toggleAuth()" class="btn btn-secondary btn-sm"></button>
 </div>
 </header>
