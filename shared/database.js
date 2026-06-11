@@ -171,9 +171,9 @@ const DB = {
     if (this._supabaseReady) {
       for (const table of ['tasks','projects','tags','connections','reports']) {
         try {
-          await fetch(this._sbUrl + '/' + table, {
+          await fetch(this._sbUrl + '/' + table + '?id=not.eq.x', {
             method: 'DELETE',
-            headers: this._sbHeaders(!!this._currentUser)
+            headers: { ...this._sbHeaders(!!this._currentUser), 'Prefer': 'return=minimal' }
           });
         } catch(e) {}
       }
