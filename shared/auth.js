@@ -116,6 +116,10 @@ const Auth = {
     return this._getRole() === 'supervisor';
   },
 
+  isSpecialist() {
+    return this._getRole() === 'editor';
+  },
+
   canEdit() {
     const r = this._getRole();
     return r === 'admin' || r === 'editor';

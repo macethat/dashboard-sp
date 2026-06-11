@@ -16,14 +16,21 @@ CREATE TABLE IF NOT EXISTS profiles (
 
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
--- Admin can see all profiles, users can see their own
+-- Admin and supervisor can see all profiles, users see their own
 DROP POLICY IF EXISTS "Profiles access" ON profiles;
-CREATE POLICY "Profiles access" ON profiles
-  FOR ALL USING (
+CREATE POLICY "Profiles select" ON profiles FOR SELECT
+  USING (
     auth.role() = 'service_role' OR
     auth.uid() = id OR
-    auth.jwt() -> 'user_metadata' ->> 'role' = 'admin'
+    auth.jwt() -> 'user_metadata' ->> 'role' IN ('admin', 'supervisor')
   );
+-- Only admin can modify profiles
+CREATE POLICY "Profiles insert" ON profiles FOR INSERT
+  WITH CHECK (auth.jwt() -> 'user_metadata' ->> 'role' = 'admin');
+CREATE POLICY "Profiles update" ON profiles FOR UPDATE
+  USING (auth.jwt() -> 'user_metadata' ->> 'role' = 'admin');
+CREATE POLICY "Profiles delete" ON profiles FOR DELETE
+  USING (auth.jwt() -> 'user_metadata' ->> 'role' = 'admin');
 
 -- 2. Add created_by to tasks
 ALTER TABLE tasks ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES auth.users(id);
@@ -33,76 +40,76 @@ ALTER TABLE tasks ADD COLUMN IF NOT EXISTS department TEXT DEFAULT '';
 ALTER TABLE projects ADD COLUMN IF NOT EXISTS department TEXT DEFAULT '';
 ALTER TABLE projects ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES auth.users(id);
 
--- 4. Replace open policies with user-aware policies
+-- 4. Replace open policies with user-aware policies (using JWT to avoid recursion)
 DROP POLICY IF EXISTS "Allow all on tasks" ON tasks;
 DROP POLICY IF EXISTS "Allow all on projects" ON projects;
 DROP POLICY IF EXISTS "Allow all on tags" ON tags;
 DROP POLICY IF EXISTS "Allow all on connections" ON connections;
 DROP POLICY IF EXISTS "Allow all on reports" ON reports;
 
--- Tasks: admins see all, editors see their dept + own, viewers see their dept
-CREATE POLICY "Tasks access" ON tasks FOR ALL
+-- Tasks
+-- SELECT: admin/supervisor/editor see ALL; viewers see only their department
+CREATE POLICY "Tasks select" ON tasks FOR SELECT
   USING (
     auth.role() = 'service_role' OR
-    (SELECT role FROM profiles WHERE id = auth.uid()) = 'admin' OR
-    created_by = auth.uid() OR
-    department = (SELECT department FROM profiles WHERE id = auth.uid())
-  )
-  WITH CHECK (
-    auth.role() = 'service_role' OR
-    (SELECT role FROM profiles WHERE id = auth.uid()) IN ('admin', 'editor')
+    auth.jwt() -> 'user_metadata' ->> 'role' IN ('admin', 'supervisor', 'editor') OR
+    department = COALESCE(auth.jwt() -> 'user_metadata' ->> 'department', '')
   );
+-- INSERT: only admin/editor
+CREATE POLICY "Tasks insert" ON tasks FOR INSERT
+  WITH CHECK (auth.jwt() -> 'user_metadata' ->> 'role' IN ('admin', 'editor'));
+-- UPDATE: admin edits all, editor edits own
+CREATE POLICY "Tasks update" ON tasks FOR UPDATE
+  USING (auth.jwt() -> 'user_metadata' ->> 'role' = 'admin' OR created_by = auth.uid())
+  WITH CHECK (auth.jwt() -> 'user_metadata' ->> 'role' IN ('admin', 'editor'));
+-- DELETE: admin deletes all, editor deletes own
+CREATE POLICY "Tasks delete" ON tasks FOR DELETE
+  USING (auth.jwt() -> 'user_metadata' ->> 'role' = 'admin' OR created_by = auth.uid());
 
--- Projects: same logic
-CREATE POLICY "Projects access" ON projects FOR ALL
+-- Projects
+CREATE POLICY "Projects select" ON projects FOR SELECT
   USING (
     auth.role() = 'service_role' OR
-    (SELECT role FROM profiles WHERE id = auth.uid()) = 'admin' OR
-    created_by = auth.uid() OR
-    department = (SELECT department FROM profiles WHERE id = auth.uid())
-  )
-  WITH CHECK (
-    auth.role() = 'service_role' OR
-    (SELECT role FROM profiles WHERE id = auth.uid()) IN ('admin', 'editor')
+    auth.jwt() -> 'user_metadata' ->> 'role' IN ('admin', 'supervisor', 'editor') OR
+    department = COALESCE(auth.jwt() -> 'user_metadata' ->> 'department', '')
   );
+CREATE POLICY "Projects insert" ON projects FOR INSERT
+  WITH CHECK (auth.jwt() -> 'user_metadata' ->> 'role' IN ('admin', 'editor'));
+CREATE POLICY "Projects update" ON projects FOR UPDATE
+  USING (auth.jwt() -> 'user_metadata' ->> 'role' = 'admin' OR created_by = auth.uid())
+  WITH CHECK (auth.jwt() -> 'user_metadata' ->> 'role' IN ('admin', 'editor'));
+CREATE POLICY "Projects delete" ON projects FOR DELETE
+  USING (auth.jwt() -> 'user_metadata' ->> 'role' = 'admin' OR created_by = auth.uid());
 
--- Tags: all authenticated users can read, only admins/editors can write
-CREATE POLICY "Tags read" ON tags FOR SELECT
+-- Tags: all authenticated can read, only admin/editor write
+CREATE POLICY "Tags select" ON tags FOR SELECT
   USING (auth.role() = 'service_role' OR auth.uid() IS NOT NULL);
-
-CREATE POLICY "Tags write" ON tags FOR INSERT
-  WITH CHECK (auth.role() = 'service_role' OR
-    (SELECT role FROM profiles WHERE id = auth.uid()) IN ('admin', 'editor'));
-
+CREATE POLICY "Tags insert" ON tags FOR INSERT
+  WITH CHECK (auth.jwt() -> 'user_metadata' ->> 'role' IN ('admin', 'editor'));
 CREATE POLICY "Tags update" ON tags FOR UPDATE
-  USING (auth.role() = 'service_role' OR
-    (SELECT role FROM profiles WHERE id = auth.uid()) IN ('admin', 'editor'));
-
+  USING (auth.jwt() -> 'user_metadata' ->> 'role' IN ('admin', 'editor'));
 CREATE POLICY "Tags delete" ON tags FOR DELETE
-  USING (auth.role() = 'service_role' OR
-    (SELECT role FROM profiles WHERE id = auth.uid()) IN ('admin', 'editor'));
+  USING (auth.jwt() -> 'user_metadata' ->> 'role' IN ('admin', 'editor'));
 
--- Connections: same as tasks
-CREATE POLICY "Connections access" ON connections FOR ALL
-  USING (
-    auth.role() = 'service_role' OR
-    (SELECT role FROM profiles WHERE id = auth.uid()) IS NOT NULL
-  )
-  WITH CHECK (
-    auth.role() = 'service_role' OR
-    (SELECT role FROM profiles WHERE id = auth.uid()) IN ('admin', 'editor')
-  );
+-- Connections: all authenticated read, admin/editor write
+CREATE POLICY "Connections select" ON connections FOR SELECT
+  USING (auth.role() = 'service_role' OR auth.uid() IS NOT NULL);
+CREATE POLICY "Connections insert" ON connections FOR INSERT
+  WITH CHECK (auth.jwt() -> 'user_metadata' ->> 'role' IN ('admin', 'editor'));
+CREATE POLICY "Connections update" ON connections FOR UPDATE
+  USING (auth.jwt() -> 'user_metadata' ->> 'role' IN ('admin', 'editor'));
+CREATE POLICY "Connections delete" ON connections FOR DELETE
+  USING (auth.jwt() -> 'user_metadata' ->> 'role' IN ('admin', 'editor'));
 
--- Reports: same as tasks
-CREATE POLICY "Reports access" ON reports FOR ALL
-  USING (
-    auth.role() = 'service_role' OR
-    (SELECT role FROM profiles WHERE id = auth.uid()) IS NOT NULL
-  )
-  WITH CHECK (
-    auth.role() = 'service_role' OR
-    (SELECT role FROM profiles WHERE id = auth.uid()) IN ('admin', 'editor')
-  );
+-- Reports: all authenticated read, admin/editor write
+CREATE POLICY "Reports select" ON reports FOR SELECT
+  USING (auth.role() = 'service_role' OR auth.uid() IS NOT NULL);
+CREATE POLICY "Reports insert" ON reports FOR INSERT
+  WITH CHECK (auth.jwt() -> 'user_metadata' ->> 'role' IN ('admin', 'editor'));
+CREATE POLICY "Reports update" ON reports FOR UPDATE
+  USING (auth.jwt() -> 'user_metadata' ->> 'role' IN ('admin', 'editor'));
+CREATE POLICY "Reports delete" ON reports FOR DELETE
+  USING (auth.jwt() -> 'user_metadata' ->> 'role' IN ('admin', 'editor'));
 
 -- 5. Auto-create profile on user signup
 CREATE OR REPLACE FUNCTION handle_new_user()
