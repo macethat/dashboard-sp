@@ -111,19 +111,27 @@ CREATE POLICY "Tags update" ON tags FOR UPDATE
 CREATE POLICY "Tags delete" ON tags FOR DELETE
   USING (auth.jwt() -> 'user_metadata' ->> 'role' IN ('admin', 'editor'));
 
--- Connections: all authenticated read, admin/editor write
+-- Connections: admin/supervisor see ALL; editors see own; viewers see own dept
 DROP POLICY IF EXISTS "Connections select" ON connections;
 DROP POLICY IF EXISTS "Connections insert" ON connections;
 DROP POLICY IF EXISTS "Connections update" ON connections;
 DROP POLICY IF EXISTS "Connections delete" ON connections;
+ALTER TABLE connections ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES auth.users(id);
+ALTER TABLE connections ADD COLUMN IF NOT EXISTS department TEXT DEFAULT '';
 CREATE POLICY "Connections select" ON connections FOR SELECT
-  USING (auth.role() = 'service_role' OR auth.uid() IS NOT NULL);
+  USING (
+    auth.role() = 'service_role' OR
+    auth.jwt() -> 'user_metadata' ->> 'role' IN ('admin', 'supervisor') OR
+    (auth.jwt() -> 'user_metadata' ->> 'role' = 'editor' AND created_by = auth.uid()) OR
+    department = COALESCE(auth.jwt() -> 'user_metadata' ->> 'department', '')
+  );
 CREATE POLICY "Connections insert" ON connections FOR INSERT
   WITH CHECK (auth.jwt() -> 'user_metadata' ->> 'role' IN ('admin', 'editor'));
 CREATE POLICY "Connections update" ON connections FOR UPDATE
-  USING (auth.jwt() -> 'user_metadata' ->> 'role' IN ('admin', 'editor'));
+  USING (auth.jwt() -> 'user_metadata' ->> 'role' = 'admin' OR created_by = auth.uid())
+  WITH CHECK (auth.jwt() -> 'user_metadata' ->> 'role' IN ('admin', 'editor'));
 CREATE POLICY "Connections delete" ON connections FOR DELETE
-  USING (auth.jwt() -> 'user_metadata' ->> 'role' IN ('admin', 'editor'));
+  USING (auth.jwt() -> 'user_metadata' ->> 'role' = 'admin' OR created_by = auth.uid());
 
 -- Reports: all authenticated read, admin/editor write
 DROP POLICY IF EXISTS "Reports select" ON reports;

@@ -119,6 +119,8 @@ const DB = {
 
   addConnection(conn) {
     conn.id = conn.id || this.genId();
+    if (this._currentUser) conn.created_by = this._currentUser.id;
+    if (this._currentProfile) conn.department = this._currentProfile.department || '';
     this.connections.push(conn);
     this.save();
     return conn;
@@ -249,6 +251,10 @@ const DB = {
       if (this._currentProfile && !m.department) m.department = this._currentProfile.department || '';
     }
     if (table === 'projects') {
+      if (this._currentUser && !m.created_by) m.created_by = this._currentUser.id;
+      if (this._currentProfile && !m.department) m.department = this._currentProfile.department || '';
+    }
+    if (table === 'connections') {
       if (this._currentUser && !m.created_by) m.created_by = this._currentUser.id;
       if (this._currentProfile && !m.department) m.department = this._currentProfile.department || '';
     }
