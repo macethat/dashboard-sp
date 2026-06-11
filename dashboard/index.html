@@ -65,7 +65,7 @@ label{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px;displa
 </div>
 </div>
 
-<aside class="sidebar" id="sidebar">
+<div id="appContainer" style="display:none"><aside class="sidebar" id="sidebar">
 <div class="p-4 border-b" style="border-color:var(--border)">
 <a href="../" style="text-decoration:none;"><div class="sp-logo-s"><span class="s">S</span><span class="p">P</span></div><div class="text-xs mt-1" style="color:var(--muted)">Suplementación Inteligente</div></a>
 </div>
@@ -192,7 +192,7 @@ label{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px;displa
 <p class="text-xs" style="color:var(--muted)">Dashboard de Gestión v1.0 - Dept. Programación y Asesoría Técnica en Marketing Digital</p></div>
 </div></div>
 
-</div></main>
+</div></main></div>
 
 <div class="modal-overlay" id="taskModal"><div class="modal">
 <div class="flex items-center justify-between mb-6"><h3 class="text-lg font-bold" id="taskModalTitle">Nueva Tarea</h3><button onclick="closeModal('taskModal')" class="p-2 rounded-lg hover:bg-gray-100">✕</button></div>
@@ -272,8 +272,8 @@ function _ce(){return Auth.canEdit();}
 function _v(){return _ce() ? '' : 'style="display:none"';}
 function updatePermissionUI(){const can=_ce();document.getElementById('btnNewTask')?.classList.toggle('hidden',!can);document.getElementById('btnNewProject')?.classList.toggle('hidden',!can);document.getElementById('btnNewTag')?.classList.toggle('hidden',!can);document.getElementById('btnNewConn')?.classList.toggle('hidden',!can);document.getElementById('btnClearAll')?.classList.toggle('hidden',!can);document.getElementById('importFileBtn')?.classList.toggle('hidden',!can);document.getElementById('navAdminLink')?.classList.toggle('hidden',!can);}
 
-function showLoginScreen(){document.getElementById('loginEmail').value='';document.getElementById('loginPassword').value='';document.getElementById('loginError').style.display='none';document.getElementById('loginScreen').classList.add('active');}
-function hideLoginScreen(){document.getElementById('loginScreen').classList.remove('active');}
+function showLoginScreen(){document.getElementById('loginEmail').value='';document.getElementById('loginPassword').value='';document.getElementById('loginError').style.display='none';document.getElementById('loginScreen').classList.add('active');document.getElementById('appContainer').style.display='none';}
+function hideLoginScreen(){document.getElementById('loginScreen').classList.remove('active');document.getElementById('appContainer').style.display='';}
 async function handleLogin(e){e.preventDefault();const email=document.getElementById('loginEmail').value;const password=document.getElementById('loginPassword').value;const btn=document.getElementById('loginSubmitBtn');const errEl=document.getElementById('loginError');btn.disabled=true;btn.textContent='Ingresando...';errEl.style.display='none';try{await Auth.login(email,password);hideLoginScreen();updateAuthUI();renderAll();}catch(err){errEl.textContent=err.message;errEl.style.display='block';}finally{btn.disabled=false;btn.textContent='Ingresar';}}
 
 function updateAuthUI(){const btn=document.getElementById('authBtn');const sbBtn=document.getElementById('sidebarLogoutBtn');if(Auth.isLoggedIn()){btn.textContent='🔒 Salir';btn.title='Cerrar sesión';document.getElementById('sidebarName').textContent=Auth.getDisplayName();document.getElementById('sidebarDept').textContent=Auth.getDashboardSubtitle();document.getElementById('sidebarStatus').className='w-2 h-2 rounded-full bg-green-500';document.getElementById('sidebarAvatar').textContent=Auth.getDisplayName().charAt(0).toUpperCase();document.getElementById('viewTitle').textContent='Dashboard';document.getElementById('viewSubtitle').textContent=Auth.getDashboardSubtitle();DB.setUser(Auth.getUser(),Auth.getProfile());DB.loadFromSupabase().then(()=>renderAll());if(sbBtn)sbBtn.style.display='block';}else{btn.textContent='🔓 Iniciar Sesión';btn.title='Iniciar sesión';document.getElementById('sidebarName').textContent='Invitado';document.getElementById('sidebarDept').textContent='Sin sesión';document.getElementById('sidebarStatus').className='w-2 h-2 rounded-full bg-gray-400';document.getElementById('sidebarAvatar').textContent='SP';document.getElementById('viewTitle').textContent='Dashboard';document.getElementById('viewSubtitle').textContent='Suplementos Panamá';DB.setUser(null,null);if(sbBtn)sbBtn.style.display='none';}updatePermissionUI();}
