@@ -282,7 +282,7 @@ let currentView='dashboard',taskMode='list',calView='month',calDate=new Date(),c
 
 function switchView(view){currentView=view;document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById('view-'+view)?.classList.add('active');document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active'));document.querySelector(`.nav-link[data-view="${view}"]`)?.classList.add('active');const t={dashboard:['Dashboard',''],tasks:['Tareas','Gestión de tareas'],calendar:['Calendario','Vista calendario'],projects:['Proyectos','Gestión de proyectos'],flow:['Flujos de Trabajo','Organización por etapas'],tags:['Etiquetas','Gestión de etiquetas'],connections:['Conexiones','Relaciones entre tareas'],reports:['Informes','Seguimiento y reportes'],settings:['Configuración','Preferencias']};if(t[view]){document.getElementById('viewTitle').textContent=t[view][0];document.getElementById('viewSubtitle').textContent=t[view][1];if(view==='dashboard'){document.getElementById('viewSubtitle').textContent=Auth.getDashboardSubtitle();}}renderAll();document.getElementById('sidebar').classList.remove('open');}
 
-function toggleAuth(){if(Auth.isLoggedIn()){Auth.logout();updateAuthUI();showLoginScreen();}else{showLoginScreen();}}
+async function toggleAuth(){if(Auth.isLoggedIn()){await Auth.logout();updateAuthUI();showLoginScreen();}else{showLoginScreen();}}
 
 function _ce(){return Auth.canEdit();}
 function _v(){return _ce() ? '' : 'style="display:none"';}
