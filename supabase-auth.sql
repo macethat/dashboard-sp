@@ -22,7 +22,7 @@ CREATE POLICY "Profiles access" ON profiles
   FOR ALL USING (
     auth.role() = 'service_role' OR
     auth.uid() = id OR
-    (SELECT role FROM profiles WHERE id = auth.uid()) = 'admin'
+    auth.jwt() -> 'user_metadata' ->> 'role' = 'admin'
   );
 
 -- 2. Add created_by to tasks
