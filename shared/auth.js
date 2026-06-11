@@ -11,7 +11,9 @@ const Auth = {
     this._baseUrl = cfg.url.replace(/\/+$/, '') + '/auth/v1';
     this._anonKey = cfg.anonKey;
     this._session = this._loadSession();
-    if (this._session) this._loadProfile();
+    if (this._session) {
+      this._loadProfile().then(() => this._notify());
+    }
   },
 
   _headers(useToken) {
@@ -98,20 +100,25 @@ const Auth = {
     return this._profile;
   },
 
+  _getRole() {
+    return this._profile?.role || this._session?.user?.user_metadata?.role || '';
+  },
+
   isLoggedIn() {
     return !!this._session;
   },
 
   isAdmin() {
-    return this._profile?.role === 'admin';
+    return this._getRole() === 'admin';
   },
 
   isSupervisor() {
-    return this._profile?.role === 'supervisor';
+    return this._getRole() === 'supervisor';
   },
 
   canEdit() {
-    return this._profile?.role === 'admin' || this._profile?.role === 'editor';
+    const r = this._getRole();
+    return r === 'admin' || r === 'editor';
   },
 
   getDepartment() {
@@ -132,7 +139,7 @@ const Auth = {
 
   getDashboardSubtitle() {
     const dept = this.getDepartment();
-    if (this.isAdmin()) return 'Acceso completo - Dept. Programación & Asesoría';
+    if (this.isAdmin()) return 'Acceso completo';
     if (dept) return 'Departamento de ' + dept;
     return 'Suplementos Panamá';
   },
