@@ -18,6 +18,10 @@ ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
 -- Admin and supervisor can see all profiles, users see their own
 DROP POLICY IF EXISTS "Profiles access" ON profiles;
+DROP POLICY IF EXISTS "Profiles select" ON profiles;
+DROP POLICY IF EXISTS "Profiles insert" ON profiles;
+DROP POLICY IF EXISTS "Profiles update" ON profiles;
+DROP POLICY IF EXISTS "Profiles delete" ON profiles;
 CREATE POLICY "Profiles select" ON profiles FOR SELECT
   USING (
     auth.role() = 'service_role' OR
@@ -48,6 +52,10 @@ DROP POLICY IF EXISTS "Allow all on connections" ON connections;
 DROP POLICY IF EXISTS "Allow all on reports" ON reports;
 
 -- Tasks
+DROP POLICY IF EXISTS "Tasks select" ON tasks;
+DROP POLICY IF EXISTS "Tasks insert" ON tasks;
+DROP POLICY IF EXISTS "Tasks update" ON tasks;
+DROP POLICY IF EXISTS "Tasks delete" ON tasks;
 -- SELECT: admin/supervisor/editor see ALL; viewers see only their department
 CREATE POLICY "Tasks select" ON tasks FOR SELECT
   USING (
@@ -67,6 +75,10 @@ CREATE POLICY "Tasks delete" ON tasks FOR DELETE
   USING (auth.jwt() -> 'user_metadata' ->> 'role' = 'admin' OR created_by = auth.uid());
 
 -- Projects
+DROP POLICY IF EXISTS "Projects select" ON projects;
+DROP POLICY IF EXISTS "Projects insert" ON projects;
+DROP POLICY IF EXISTS "Projects update" ON projects;
+DROP POLICY IF EXISTS "Projects delete" ON projects;
 CREATE POLICY "Projects select" ON projects FOR SELECT
   USING (
     auth.role() = 'service_role' OR
@@ -82,6 +94,10 @@ CREATE POLICY "Projects delete" ON projects FOR DELETE
   USING (auth.jwt() -> 'user_metadata' ->> 'role' = 'admin' OR created_by = auth.uid());
 
 -- Tags: all authenticated can read, only admin/editor write
+DROP POLICY IF EXISTS "Tags select" ON tags;
+DROP POLICY IF EXISTS "Tags insert" ON tags;
+DROP POLICY IF EXISTS "Tags update" ON tags;
+DROP POLICY IF EXISTS "Tags delete" ON tags;
 CREATE POLICY "Tags select" ON tags FOR SELECT
   USING (auth.role() = 'service_role' OR auth.uid() IS NOT NULL);
 CREATE POLICY "Tags insert" ON tags FOR INSERT
@@ -92,6 +108,10 @@ CREATE POLICY "Tags delete" ON tags FOR DELETE
   USING (auth.jwt() -> 'user_metadata' ->> 'role' IN ('admin', 'editor'));
 
 -- Connections: all authenticated read, admin/editor write
+DROP POLICY IF EXISTS "Connections select" ON connections;
+DROP POLICY IF EXISTS "Connections insert" ON connections;
+DROP POLICY IF EXISTS "Connections update" ON connections;
+DROP POLICY IF EXISTS "Connections delete" ON connections;
 CREATE POLICY "Connections select" ON connections FOR SELECT
   USING (auth.role() = 'service_role' OR auth.uid() IS NOT NULL);
 CREATE POLICY "Connections insert" ON connections FOR INSERT
@@ -102,6 +122,10 @@ CREATE POLICY "Connections delete" ON connections FOR DELETE
   USING (auth.jwt() -> 'user_metadata' ->> 'role' IN ('admin', 'editor'));
 
 -- Reports: all authenticated read, admin/editor write
+DROP POLICY IF EXISTS "Reports select" ON reports;
+DROP POLICY IF EXISTS "Reports insert" ON reports;
+DROP POLICY IF EXISTS "Reports update" ON reports;
+DROP POLICY IF EXISTS "Reports delete" ON reports;
 CREATE POLICY "Reports select" ON reports FOR SELECT
   USING (auth.role() = 'service_role' OR auth.uid() IS NOT NULL);
 CREATE POLICY "Reports insert" ON reports FOR INSERT
