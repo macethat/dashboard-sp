@@ -35,6 +35,8 @@ label{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px;displa
 @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}.fade-in{animation:fadeIn 0.3s ease;}
 a.back-link{color:var(--muted);text-decoration:none;font-size:13px;margin-bottom:12px;display:inline-flex;align-items:center;gap:6px;}
 a.back-link:hover{color:var(--text);}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:all 0.3s;}.modal-overlay.active{opacity:1;visibility:visible;}.modal{background:var(--card);border-radius:16px;max-width:600px;width:90%;max-height:90vh;overflow-y:auto;padding:24px;transform:scale(0.9);transition:transform 0.3s;}.modal-overlay.active .modal{transform:scale(1);}
+.hidden{display:none!important;}
 </style>
 </head>
 <body>
@@ -52,7 +54,8 @@ a.back-link:hover{color:var(--text);}
 <div class="mb-8">
 <div class="flex items-center gap-3 mb-2">
 <div class="sp-logo"><span class="s">S</span><span class="p">P</span></div>
-<div><h1 class="text-xl font-bold">Carga de Datos</h1><p class="text-sm" style="color:var(--muted)">Administra y carga datos al sistema de Suplementos Panamá</p></div>
+<div class="flex-1"><h1 class="text-xl font-bold">Carga de Datos</h1><p class="text-sm" style="color:var(--muted)">Administra y carga datos al sistema de Suplementos Panamá</p></div>
+<button id="adminAuthBtn2" onclick="toggleAdminAuth()" class="btn btn-secondary btn-sm">🔓 Iniciar Sesión</button>
 </div>
 </div>
 
@@ -63,6 +66,7 @@ a.back-link:hover{color:var(--text);}
 <button class="tab-btn" onclick="switchTab('file')" id="tabFile">📁 Archivo</button>
 <button class="tab-btn" onclick="switchTab('bulk')" id="tabBulk">⚡ Masiva</button>
 <button class="tab-btn" onclick="switchTab('guide')" id="tabGuide"> Guía</button>
+<button class="tab-btn" onclick="switchTab('users')" id="tabUsers">👥 Usuarios</button>
 </div>
 
 <!-- MANUAL -->
@@ -190,6 +194,17 @@ Configurar Analytics | en-progreso | media | Miguel Torres | 2025-02-28 | codigo
 </div>
 </div>
 
+<!-- USERS -->
+<div id="panelUsers" style="display:none" class="fade-in space-y-6">
+<div class="flex items-center justify-between mb-4">
+<div><h3 class="text-lg font-bold">👥 Gestión de Usuarios</h3><p class="text-sm" style="color:var(--muted)">Administra usuarios del sistema (solo admin)</p></div>
+<button id="adminAuthBtn" onclick="toggleAdminAuth()" class="btn btn-secondary btn-sm">🔓 Iniciar Sesión</button>
+</div>
+<div id="userList" class="card p-6">
+<div class="text-center py-12" style="color:var(--muted)"><p>Inicia sesión como administrador para gestionar usuarios</p></div>
+</div>
+</div>
+
 <!-- GUIDE -->
 <div id="panelGuide" style="display:none" class="fade-in space-y-6">
 <div class="card p-6">
@@ -229,8 +244,9 @@ Configurar Analytics | en-progreso | media | Miguel Torres | 2025-02-28 | codigo
 <script src="../shared/config.js"></script>
 <script src="../shared/database.js"></script>
 <script src="../shared/utils.js"></script>
+<script src="../shared/auth.js"></script>
 <script>
-function switchTab(tab){document.querySelectorAll('[id^="panel"]').forEach(p=>p.style.display='none');document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.getElementById('panel'+tab.charAt(0).toUpperCase()+tab.slice(1)).style.display='block';document.getElementById('tab'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.add('active');}
+function switchTab(tab){document.querySelectorAll('[id^="panel"]').forEach(p=>p.style.display='none');document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.getElementById('panel'+tab.charAt(0).toUpperCase()+tab.slice(1)).style.display='block';document.getElementById('tab'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.add('active');if(tab==='users')renderUsers();}
 
 function showToast(title,msg,type){const t=document.getElementById('toast'),ic=document.getElementById('toastIcon');document.getElementById('toastTitle').textContent=title;document.getElementById('toastMsg').textContent=msg;const icons={success:{bg:'#dcfce7',icon:'✅'},error:{bg:'#fee2e2',icon:'❌'},warning:{bg:'#fef9c3',icon:'⚠️'}};const i=icons[type]||icons.success;ic.style.background=i.bg;ic.textContent=i.icon;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),4000);}
 
@@ -274,6 +290,19 @@ function importPresetData(data,name){let nt=0,np=0,nc=0;data.tags.forEach(t=>{if
 
 function loadSampleData(){importPreset('full');}
 
+function toggleAdminAuth(){if(Auth.isLoggedIn()){Auth.logout();updateAdminAuthUI();}else{const m=document.createElement('div');m.className='modal-overlay active';m.id='adminLoginOverlay';m.innerHTML='<div class="modal" style="max-width:360px"><div class="flex items-center justify-between mb-6"><h3 class="text-lg font-bold">Iniciar Sesión</h3><button onclick="this.closest(\'.modal-overlay\').remove()" class="p-2 rounded-lg hover:bg-gray-100">✕</button></div><form onsubmit="adminLogin(event)"><div class="space-y-4"><div><label>Correo</label><input type="email" id="adminLoginEmail" required placeholder="admin@sp.com"></div><div><label>Contraseña</label><input type="password" id="adminLoginPassword" required></div><p id="adminLoginError" class="text-xs text-red-500" style="display:none"></p></div><div class="flex gap-3 mt-6"><button type="submit" id="adminLoginBtn" class="btn btn-primary flex-1">Ingresar</button><button type="button" onclick="this.closest(\'.modal-overlay\').remove()" class="btn btn-secondary">Cancelar</button></div></form></div>';document.body.appendChild(m);}}
+
+async function adminLogin(e){e.preventDefault();const email=document.getElementById('adminLoginEmail').value,pass=document.getElementById('adminLoginPassword').value;const err=document.getElementById('adminLoginError');const btn=document.getElementById('adminLoginBtn');btn.disabled=true;btn.textContent='Ingresando...';err.style.display='none';try{await Auth.login(email,pass);document.getElementById('adminLoginOverlay').remove();updateAdminAuthUI();renderUsers();}catch(ex){err.textContent=ex.message;err.style.display='block';}btn.disabled=false;btn.textContent='Ingresar';}
+
+function updateAdminAuthUI(){['adminAuthBtn','adminAuthBtn2'].forEach(id=>{const btn=document.getElementById(id);if(btn){if(Auth.isLoggedIn()){btn.textContent='🔒 Salir ('+Auth.getDisplayName()+')';btn.title='Cerrar sesión';}else{btn.textContent='🔓 Iniciar Sesión';btn.title='Iniciar sesión';}}});}
+
+async function renderUsers(){const el=document.getElementById('userList');if(!el)return;if(!Auth.isLoggedIn()){el.innerHTML='<div class="text-center py-12" style="color:var(--muted)"><p>Inicia sesión como administrador para gestionar usuarios</p></div>';return;}const canEdit=Auth.isAdmin();if(!canEdit){el.innerHTML='<div class="text-center py-12" style="color:var(--muted)"><p>Solo administradores pueden gestionar usuarios</p></div>';return;}try{const res=await fetch(Auth._baseUrl.replace('/auth/v1','/rest/v1/profiles?select=*'),{headers:Auth._headers(true)});if(!res.ok)throw new Error('Error fetching users');const users=await res.json();let h='<div class="flex items-center justify-between mb-4"><h4 class="text-sm font-bold">Usuarios ('+users.length+')</h4><button onclick="showCreateUserForm()" class="btn btn-primary btn-sm">➕ Nuevo Usuario</button></div>';h+='<div class="overflow-x-auto"><table class="preview-table"><tr><th>Email</th><th>Nombre</th><th>Rol</th><th>Departamento</th></tr>';users.forEach(u=>{h+='<tr><td>'+u.email+'</td><td>'+(u.display_name||'-')+'</td><td><span class="badge '+(u.role==='admin'?'badge-red':u.role==='editor'?'badge-blue':'badge-yellow')+'">'+(u.role||'viewer')+'</span></td><td>'+(u.department||'-')+'</td></tr>';});h+='</table></div>';el.innerHTML=h;}catch(ex){el.innerHTML='<div class="text-center py-12" style="color:var(--muted)"><p>Error: '+ex.message+'</p></div>';}}
+
+function showCreateUserForm(){const el=document.getElementById('userList');el.innerHTML='<div class="card p-6 fade-in"><div class="flex items-center justify-between mb-6"><h4 class="text-sm font-bold">Crear Nuevo Usuario</h4><button onclick="renderUsers()" class="btn btn-secondary btn-sm">Volver</button></div><form onsubmit="createUser(event)"><div class="space-y-4"><div><label>Correo electrónico</label><input type="email" id="newUserEmail" required placeholder="usuario@sp.com"></div><div><label>Contraseña</label><input type="password" id="newUserPassword" required minlength="6" placeholder="Mín. 6 caracteres"></div><div><label>Nombre</label><input type="text" id="newUserName" placeholder="Nombre del usuario"></div><div><label>Rol</label><select id="newUserRole"><option value="editor">Editor (puede editar datos)</option><option value="viewer">Solo Visión (solo ver dashboard)</option></select></div><div><label>Departamento</label><select id="newUserDept"><option value="Community Manager">Community Manager</option><option value="Diseñador Gráfico">Diseñador Gráfico</option><option value="Redactor">Redactor</option><option value="Analista">Analista</option><option value="Desarrollador">Desarrollador</option><option value="Marketing">Marketing</option></select></div><p id="createUserError" class="text-xs text-red-500" style="display:none"></p></div><div class="flex gap-3 mt-6"><button type="submit" id="createUserBtn" class="btn btn-primary flex-1">Crear Usuario</button><button type="button" onclick="renderUsers()" class="btn btn-secondary">Cancelar</button></div></form></div>';}
+
+async function createUser(e){e.preventDefault();const email=document.getElementById('newUserEmail').value,password=document.getElementById('newUserPassword').value,role=document.getElementById('newUserRole').value,dept=document.getElementById('newUserDept').value,name=document.getElementById('newUserName').value;const btn=document.getElementById('createUserBtn');const err=document.getElementById('createUserError');btn.disabled=true;btn.textContent='Creando...';err.style.display='none';try{const res=await fetch(Auth._baseUrl.replace('/auth/v1','/auth/v1/admin/users'),{method:'POST',headers:Object.assign(Auth._headers(true),{'Authorization':'Bearer '+Auth._session.access_token}),body:JSON.stringify({email,password,email_confirm:true,user_metadata:{role,department:dept,display_name:name||email.split('@')[0]}})});if(!res.ok){const data=await res.json();throw new Error(data.msg||data.error_description||data.error||'Error al crear usuario');}showToast('Usuario creado','Se ha creado '+email);renderUsers();}catch(ex){err.textContent=ex.message;err.style.display='block';}btn.disabled=false;btn.textContent='Crear Usuario';}
+
+Auth.init();Auth.onChange(function(){updateAdminAuthUI();if(Auth.isLoggedIn()){DB.setUser(Auth.getUser(),Auth.getProfile());DB.loadFromSupabase().then(()=>renderAdminStats());}});updateAdminAuthUI();
 Utils.initTheme();renderAdminStats();
 const csvDropZone=document.getElementById('csvDropZone');if(csvDropZone){csvDropZone.addEventListener('dragover',function(e){e.preventDefault();this.classList.add('dragover');});csvDropZone.addEventListener('dragleave',function(){this.classList.remove('dragover');});csvDropZone.addEventListener('drop',function(e){e.preventDefault();this.classList.remove('dragover');const f=e.dataTransfer.files[0];if(f&&f.name.endsWith('.csv')){const r=new FileReader();r.onload=function(ev){document.getElementById('csvInput').value=ev.target.result;showToast('CSV cargado',f.name);};r.readAsText(f);}else{showToast('Error','Solo .csv','error');}});}
 </script>

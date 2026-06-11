@@ -4,6 +4,8 @@ const DB = {
   tags: [],
   connections: [],
   reports: [],
+  _currentUser: null,
+  _currentProfile: null,
 
   init() {
     this.tasks = this._load('sp_tasks') || [];
@@ -15,6 +17,11 @@ const DB = {
     if (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.supabase.enabled) {
       this._initSupabase();
     }
+  },
+
+  setUser(user, profile) {
+    this._currentUser = user;
+    this._currentProfile = profile;
   },
 
   _load(key) {
@@ -44,6 +51,8 @@ const DB = {
     task.created = task.created || new Date().toISOString().split('T')[0];
     task.progress = typeof task.progress === 'number' ? task.progress : 0;
     task.incidents = task.incidents || [];
+    if (this._currentUser) task.created_by = this._currentUser.id;
+    if (this._currentProfile) task.department = this._currentProfile.department || '';
     this.tasks.push(task);
     this.save();
     return task;
@@ -78,6 +87,8 @@ const DB = {
 
   addProject(project) {
     project.id = project.id || this.genId();
+    if (this._currentUser) project.created_by = this._currentUser.id;
+    if (this._currentProfile) project.department = this._currentProfile.department || '';
     this.projects.push(project);
     this.save();
     return project;
@@ -222,10 +233,13 @@ const DB = {
     }
   },
 
-  _sbHeaders() {
+  _sbHeaders(useUserToken) {
+    const token = (useUserToken && typeof Auth !== 'undefined' && Auth._session)
+      ? Auth._session.access_token
+      : this._sbKey;
     return {
       'apikey': this._sbKey,
-      'Authorization': 'Bearer ' + this._sbKey,
+      'Authorization': 'Bearer ' + token,
       'Content-Type': 'application/json',
       'Prefer': 'return=minimal'
     };
@@ -236,6 +250,12 @@ const DB = {
     if (table === 'tasks') {
       if (m.dueDate && !m.due_date) { m.due_date = m.dueDate; delete m.dueDate; }
       if (m.projectId && !m.project_id) { m.project_id = m.projectId; delete m.projectId; }
+      if (this._currentUser && !m.created_by) m.created_by = this._currentUser.id;
+      if (this._currentProfile && !m.department) m.department = this._currentProfile.department || '';
+    }
+    if (table === 'projects') {
+      if (this._currentUser && !m.created_by) m.created_by = this._currentUser.id;
+      if (this._currentProfile && !m.department) m.department = this._currentProfile.department || '';
     }
     return m;
   },
@@ -279,9 +299,9 @@ const DB = {
     try {
       const tables = ['tasks', 'projects', 'tags', 'connections', 'reports'];
       for (const table of tables) {
-        const res = await fetch(this._sbUrl + '/' + table + '?select=*', {
-          headers: this._sbHeaders()
-        });
+        let url = this._sbUrl + '/' + table + '?select=*';
+        const headers = this._sbHeaders(!!this._currentUser);
+        const res = await fetch(url, { headers });
         if (!res.ok) continue;
         const data = await res.json();
         if (data && data.length) {
@@ -292,6 +312,10 @@ const DB = {
     } catch (e) {
       console.warn('Supabase sync from failed:', e);
     }
+  },
+
+  async loadFromSupabase() {
+    if (this._supabaseReady) await this._syncFromSupabase();
   }
 };
 
