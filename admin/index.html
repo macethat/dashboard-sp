@@ -210,18 +210,47 @@ Configurar Analytics | en-progreso | media | Miguel Torres | 2025-02-28 | codigo
 <div class="card p-6">
 <h3 class="text-lg font-bold mb-6">📖 Guía Completa de Carga de Datos</h3>
 <div class="space-y-8">
-<div><div class="step active"><div class="step-num">1</div><div><h4 class="text-sm font-bold">Formulario Manual</h4><p class="text-sm" style="color:var(--muted)">Agrega tareas, proyectos y etiquetas uno por uno.</p></div></div></div>
+<div><div class="step active"><div class="step-num">1</div><div><h4 class="text-sm font-bold">Formulario Manual</h4><p class="text-sm" style="color:var(--muted)">Agrega tareas, proyectos y etiquetas uno por uno.</p>
+<div class="mt-4 p-4 rounded-lg" style="background:var(--bg);border:1px solid var(--border)">
+<h5 class="text-xs font-bold mb-3" style="text-transform:uppercase;letter-spacing:1px;color:var(--muted)">📋 Campos del formulario de tareas</h5>
+<table class="preview-table"><tr><th style="width:120px">Campo</th><th>Descripción</th></tr>
+<tr><td>Nombre</td><td>Título descriptivo de la tarea. Ej: "Diseñar banner campaña Q3"</td></tr>
+<tr><td>Descripción</td><td>Detalle adicional opcional. Ej: "Incluir logo y colores corporativos"</td></tr>
+<tr><td>Estado</td><td>Pendiente → En Progreso → En Revisión → Completado / Cancelado</td></tr>
+<tr><td>Prioridad</td><td>Baja (verde), Media (amarillo), Alta (rojo). Prioriza tareas críticas</td></tr>
+<tr><td>Asignado</td><td>Nombre de la persona responsable. Puedes escribir cualquier nombre</td></tr>
+<tr><td>Fecha Límite</td><td>Fecha de vencimiento. Las tareas vencidas se marcan en el calendario</td></tr>
+<tr><td>Proyecto</td><td>Selecciona un proyecto existente o déjalo vacío para crearlo después</td></tr>
+<tr><td>Etiquetas</td><td>Separadas por coma. Se crean automáticamente si no existen. Ej: "redes, diseño, urgente"</td></tr>
+<tr><td>Etapa</td><td>Planificación → Desarrollo → Revisión → Pruebas → Implementación → Seguimiento</td></tr>
+</table>
+<h5 class="text-xs font-bold mt-4 mb-3" style="text-transform:uppercase;letter-spacing:1px;color:var(--muted)">📁 Campos del formulario de proyectos</h5>
+<table class="preview-table"><tr><th style="width:120px">Campo</th><th>Descripción</th></tr>
+<tr><td>Nombre</td><td>Nombre del proyecto. Ej: "Campaña Marketing Q4"</td></tr>
+<tr><td>Descripción</td><td>Breve resumen del objetivo del proyecto</td></tr>
+<tr><td>Inicio / Fin</td><td>Fechas del proyecto. Se ven en la línea de tiempo del dashboard</td></tr>
+<tr><td>Responsable</td><td>Persona a cargo del proyecto</td></tr>
+<tr><td>Color</td><td>Identificador visual. Las tareas del proyecto heredan este color en los gráficos</td></tr>
+</table>
+<h5 class="text-xs font-bold mt-4 mb-3" style="text-transform:uppercase;letter-spacing:1px;color:var(--muted)">🏷️ Campos del formulario de etiquetas</h5>
+<table class="preview-table"><tr><th style="width:120px">Campo</th><th>Descripción</th></tr>
+<tr><td>Nombre</td><td>Nombre de la etiqueta. Ej: "Redes Sociales", "Desarrollo", "Urgente"</td></tr>
+<tr><td>Color</td><td>Color para identificar visualmente la etiqueta en las tarjetas</td></tr>
+<tr><td>Descripción</td><td>Opcional. Explica cuándo usar esta etiqueta</td></tr>
+</table>
+</div>
+</div></div></div>
 <div class="connector"></div>
 <div><div class="step"><div class="step-num">2</div><div><h4 class="text-sm font-bold">Importar JSON</h4><p class="text-sm" style="color:var(--muted)">Pega datos JSON. Usa los templates predefinidos.</p>
 <div class="mt-3 code-block"><span class="comment">// Ejemplo: Agregar tarea</span>
 [{"<span class="key">name</span>":"<span class="str">Mi tarea</span>","<span class="key">status</span>":"<span class="str">pendiente</span>","<span class="key">priority</span>":"<span class="str">alta</span>","<span class="key">assignee</span>":"<span class="str">Carlos</span>","<span class="key">dueDate</span>":"<span class="str">2025-03-15</span>","<span class="key">tags</span>":["<span class="str">marketing</span>"],"stage":"<span class="str">planificacion</span>","<span class="key">desc</span>":"<span class="str">Descripción</span>"}]</div>
 </div></div></div>
 <div class="connector"></div>
-<div><div class="step"><div class="step-num">3</div><div><h4 class="text-sm font-bold">Importar CSV</h4><p class="text-sm" style="color:var(--muted)">Exporta desde Excel como CSV y pega aquí.</p></div></div></div>
+<div><div class="step"><div class="step-num">3</div><div><h4 class="text-sm font-bold">Importar CSV</h4><p class="text-sm" style="color:var(--muted)">Exporta desde Excel como CSV y pega aquí. Asegúrate de incluir los encabezados correctos.</p></div></div></div>
 <div class="connector"></div>
-<div><div class="step"><div class="step-num">4</div><div><h4 class="text-sm font-bold">Archivo de Respaldo</h4><p class="text-sm" style="color:var(--muted)">Restaura un respaldo exportado.</p></div></div></div>
+<div><div class="step"><div class="step-num">4</div><div><h4 class="text-sm font-bold">Archivo de Respaldo</h4><p class="text-sm" style="color:var(--muted)">Restaura un respaldo exportado previamente desde el sistema.</p></div></div></div>
 <div class="connector"></div>
-<div><div class="step"><div class="step-num">5</div><div><h4 class="text-sm font-bold">Carga Masiva</h4><p class="text-sm" style="color:var(--muted)">Escribe múltiples tareas separando con | (pipe).</p></div></div></div>
+<div><div class="step"><div class="step-num">5</div><div><h4 class="text-sm font-bold">Carga Masiva</h4><p class="text-sm" style="color:var(--muted)">Escribe múltiples tareas separando cada campo con | (pipe). Una tarea por línea. Orden: nombre | estado | prioridad | asignado | fecha | etiquetas | etapa | descripción</p></div></div></div>
 </div>
 <div class="mt-8 p-5 rounded-lg" style="background:var(--bg);border:1px solid var(--border)">
 <h4 class="text-sm font-bold mb-3">🔄 Flujo Recomendado</h4>
