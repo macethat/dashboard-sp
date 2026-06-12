@@ -43,6 +43,8 @@ ALTER TABLE tasks ADD COLUMN IF NOT EXISTS department TEXT DEFAULT '';
 -- 3. Add department to projects
 ALTER TABLE projects ADD COLUMN IF NOT EXISTS department TEXT DEFAULT '';
 ALTER TABLE projects ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES auth.users(id);
+ALTER TABLE projects ADD COLUMN IF NOT EXISTS is_team BOOLEAN DEFAULT false;
+ALTER TABLE projects ADD COLUMN IF NOT EXISTS members JSONB DEFAULT '[]'::jsonb;
 
 -- 4. Replace open policies with user-aware policies (using JWT to avoid recursion)
 DROP POLICY IF EXISTS "Allow all on tasks" ON tasks;
@@ -56,25 +58,63 @@ DROP POLICY IF EXISTS "Tasks select" ON tasks;
 DROP POLICY IF EXISTS "Tasks insert" ON tasks;
 DROP POLICY IF EXISTS "Tasks update" ON tasks;
 DROP POLICY IF EXISTS "Tasks delete" ON tasks;
--- SELECT: admin/supervisor see ALL; editors see only own; viewers see only their department
+-- SELECT: admin/supervisor see ALL; editors see own + team projects they belong to; viewers see only their department
 DROP POLICY IF EXISTS "Tasks select" ON tasks;
 CREATE POLICY "Tasks select" ON tasks FOR SELECT
   USING (
     auth.role() = 'service_role' OR
     auth.jwt() -> 'user_metadata' ->> 'role' IN ('admin', 'supervisor') OR
-    (auth.jwt() -> 'user_metadata' ->> 'role' = 'editor' AND created_by = auth.uid()) OR
+    (auth.jwt() -> 'user_metadata' ->> 'role' = 'editor' AND (
+      created_by = auth.uid() OR
+      EXISTS (
+        SELECT 1 FROM projects
+        WHERE projects.id = tasks.project_id
+        AND projects.is_team = true
+        AND projects.members ? auth.uid()::text
+      )
+    )) OR
     department = COALESCE(auth.jwt() -> 'user_metadata' ->> 'department', '')
   );
--- INSERT: only admin/editor
+-- INSERT: only admin/editor (team members can also insert into their team projects)
 CREATE POLICY "Tasks insert" ON tasks FOR INSERT
-  WITH CHECK (auth.jwt() -> 'user_metadata' ->> 'role' IN ('admin', 'editor'));
--- UPDATE: admin edits all, editor edits own
+  WITH CHECK (
+    auth.jwt() -> 'user_metadata' ->> 'role' IN ('admin', 'editor') AND (
+      auth.jwt() -> 'user_metadata' ->> 'role' = 'admin' OR
+      EXISTS (
+        SELECT 1 FROM projects
+        WHERE projects.id = tasks.project_id
+        AND (
+          projects.created_by = auth.uid() OR
+          (projects.is_team = true AND projects.members ? auth.uid()::text)
+        )
+      )
+    )
+  );
+-- UPDATE: admin edits all, editor edits own + team project tasks
 CREATE POLICY "Tasks update" ON tasks FOR UPDATE
-  USING (auth.jwt() -> 'user_metadata' ->> 'role' = 'admin' OR created_by = auth.uid())
+  USING (
+    auth.jwt() -> 'user_metadata' ->> 'role' = 'admin' OR
+    created_by = auth.uid() OR
+    EXISTS (
+      SELECT 1 FROM projects
+      WHERE projects.id = tasks.project_id
+      AND projects.is_team = true
+      AND projects.members ? auth.uid()::text
+    )
+  )
   WITH CHECK (auth.jwt() -> 'user_metadata' ->> 'role' IN ('admin', 'editor'));
--- DELETE: admin deletes all, editor deletes own
+-- DELETE: admin deletes all, editor deletes own + team project tasks they created
 CREATE POLICY "Tasks delete" ON tasks FOR DELETE
-  USING (auth.jwt() -> 'user_metadata' ->> 'role' = 'admin' OR created_by = auth.uid());
+  USING (
+    auth.jwt() -> 'user_metadata' ->> 'role' = 'admin' OR
+    created_by = auth.uid() OR
+    EXISTS (
+      SELECT 1 FROM projects
+      WHERE projects.id = tasks.project_id
+      AND projects.is_team = true
+      AND projects.members ? auth.uid()::text
+    )
+  );
 
 -- Projects
 DROP POLICY IF EXISTS "Projects select" ON projects;
@@ -86,7 +126,10 @@ CREATE POLICY "Projects select" ON projects FOR SELECT
   USING (
     auth.role() = 'service_role' OR
     auth.jwt() -> 'user_metadata' ->> 'role' IN ('admin', 'supervisor') OR
-    (auth.jwt() -> 'user_metadata' ->> 'role' = 'editor' AND created_by = auth.uid()) OR
+    (auth.jwt() -> 'user_metadata' ->> 'role' = 'editor' AND (
+      created_by = auth.uid() OR
+      (is_team = true AND members ? auth.uid()::text)
+    )) OR
     department = COALESCE(auth.jwt() -> 'user_metadata' ->> 'department', '')
   );
 CREATE POLICY "Projects insert" ON projects FOR INSERT

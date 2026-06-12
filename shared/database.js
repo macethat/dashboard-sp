@@ -75,6 +75,9 @@ const DB = {
     project.id = project.id || this.genId();
     if (this._currentUser) project.created_by = this._currentUser.id;
     if (this._currentProfile) project.department = this._currentProfile.department || '';
+    if (project.is_team) {
+      project.members = project.members || [];
+    }
     this.projects.push(project);
     this.save();
     return project;
@@ -253,6 +256,11 @@ const DB = {
     if (table === 'projects') {
       if (this._currentUser && !m.created_by) m.created_by = this._currentUser.id;
       if (this._currentProfile && !m.department) m.department = this._currentProfile.department || '';
+      if (m.members && typeof m.members === 'string') {
+        try { m.members = JSON.parse(m.members); } catch(e) { m.members = []; }
+      }
+      if (!m.members) m.members = [];
+      if (m.is_team === undefined || m.is_team === null) m.is_team = false;
     }
     if (table === 'connections') {
       if (this._currentUser && !m.created_by) m.created_by = this._currentUser.id;
@@ -290,8 +298,9 @@ const DB = {
       if (m.project_id && !m.projectId) { m.projectId = m.project_id; delete m.project_id; }
     }
     if (table === 'projects') {
-      if (m.start && !m.start) { }
-      if (m.end && !m.end) { }
+      if (m.members && typeof m.members === 'string') {
+        try { m.members = JSON.parse(m.members); } catch(e) { m.members = []; }
+      }
     }
     return m;
   },
